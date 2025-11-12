@@ -43,10 +43,13 @@ export default defineConfig({
   
   /**
    * 部署基础路径
-   * 如果部署到 GitHub Pages 子目录，需要设置对应的路径
-   * 例如：https://username.github.io/my-notes/ 则设置为 '/my-notes/'
+   * 
+   * ⚠️ 重要修改：
+   * 根据您的 GitHub 仓库名称 Knowledge-Base
+   * 访问地址是：https://xiaojie225.github.io/Knowledge-Base/
+   * 所以 base 必须设置为 '/Knowledge-Base/'
    */
-  base: '/', 
+  base: '/Knowledge-Base/',
   
   /**
    * 生成简洁 URL（移除 .html 后缀）
@@ -64,7 +67,7 @@ export default defineConfig({
    * 用于添加网站图标、SEO 标签等
    */
   head: [
-    ['link', { rel: 'icon', href: '/favicon.ico' }],
+    ['link', { rel: 'icon', href: '/Knowledge-Base/favicon.ico' }],
     ['meta', { name: 'theme-color', content: '#3eaf7c' }],
     ['meta', { name: 'viewport', content: 'width=device-width, initial-scale=1.0' }]
   ],
@@ -371,7 +374,7 @@ export default defineConfig({
     socialLinks: [
       { 
         icon: 'github', 
-        link: 'https://github.com/yourusername/my-notes' 
+        link: 'https://github.com/xiaojie225/Knowledge-Base' 
       }
     ],
     
