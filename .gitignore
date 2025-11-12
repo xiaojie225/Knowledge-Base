@@ -1,5 +1,5 @@
 # Node.js 依赖目录
-node_modules/
+node_modules
 
 # VitePress 构建输出目录
 .vitepress/dist
