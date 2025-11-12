@@ -1,0 +1,24 @@
+{
+  "name": "my-notes",
+  "version": "1.0.0",
+  "description": "个人技术学习笔记知识库 - 基于 VitePress 构建",
+  "type": "module",
+  "scripts": {
+    "docs:dev": "vitepress dev",
+    "docs:build": "vitepress build",
+    "docs:preview": "vitepress preview"
+  },
+  "devDependencies": {
+    "vitepress": "^1.0.0"
+  },
+  "keywords": [
+    "vitepress",
+    "notes",
+    "documentation",
+    "learning",
+    "vue",
+    "技术笔记"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}

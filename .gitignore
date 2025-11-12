@@ -1,0 +1,38 @@
+# Node.js 依赖目录
+node_modules/
+
+# VitePress 构建输出目录
+.vitepress/dist
+.vitepress/cache
+
+# 日志文件
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# 操作系统文件
+.DS_Store
+Thumbs.db
+
+# 编辑器配置
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 环境变量文件
+.env
+.env.local
+.env.*.local
+
+# 临时文件
+*.tmp
+*.temp
+
+# 锁文件（如果使用不同的包管理器）
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml

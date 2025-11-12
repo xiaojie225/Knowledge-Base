@@ -1,0 +1,143 @@
+###
+# GitHub Actions 自动部署配置文件
+# 
+# 这个文件配置了自动化部署流程：
+# 1. 当代码推送到 main 分支时自动触发
+# 2. 安装依赖、构建项目
+# 3. 将构建产物部署到 GitHub Pages
+# 
+# 文档：https://docs.github.com/actions
+###
+
+# 工作流名称
+# 这个名称会显示在 GitHub Actions 页面
+name: Deploy VitePress site to Pages
+
+# 触发条件
+on:
+  # 当推送到 main 分支时触发
+  push:
+    branches: [main]
+  
+  # 允许手动触发工作流
+  # 在 GitHub 仓库的 Actions 页面可以手动运行
+  workflow_dispatch:
+
+# 设置 GITHUB_TOKEN 的权限
+# 这些权限是部署到 GitHub Pages 所必需的
+permissions:
+  contents: read    # 读取仓库内容
+  pages: write      # 写入 GitHub Pages
+  id-token: write   # 写入 ID token（用于认证）
+
+# 并发控制
+# 确保同一时间只有一个部署任务在运行
+concurrency:
+  group: pages                    # 并发组名称
+  cancel-in-progress: false       # 不取消正在进行的任务
+
+# 定义工作流中的任务
+jobs:
+  ###
+  # 构建任务
+  # 负责编译 VitePress 项目，生成静态文件
+  ###
+  build:
+    # 运行环境：使用 Ubuntu 最新版本
+    runs-on: ubuntu-latest
+    
+    # 构建步骤
+    steps:
+      ###
+      # 步骤 1：检出代码
+      # 从 GitHub 仓库拉取最新代码
+      ###
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # 获取所有 Git 历史记录
+          # 这对于显示"最后更新时间"功能很重要
+          fetch-depth: 0
+      
+      ###
+      # 步骤 2：设置 Node.js 环境
+      # 安装 Node.js，VitePress 需要 Node.js 运行
+      ###
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20           # 使用 Node.js 20 版本
+          cache: npm                 # 启用 npm 缓存，加快安装速度
+          # 如果使用 pnpm，改为：cache: 'pnpm'
+      
+      ###
+      # 步骤 3：配置 GitHub Pages
+      # 设置 Pages 的相关配置
+      ###
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+      
+      ###
+      # 步骤 4：安装依赖
+      # 安装项目所需的 npm 包
+      ###
+      - name: Install dependencies
+        run: |
+          # npm ci 命令说明：
+          # - 比 npm install 更快、更可靠
+          # - 使用 package-lock.json 锁定版本
+          # - 适合 CI/CD 环境
+          npm ci
+          # 如果使用 pnpm：pnpm install --frozen-lockfile
+      
+      ###
+      # 步骤 5：构建 VitePress 项目
+      # 将 Markdown 文件编译为静态 HTML
+      ###
+      - name: Build with VitePress
+        run: |
+          # 运行构建命令
+          # 会在 docs/.vitepress/dist 目录生成静态文件
+          npm run docs:build
+          # 如果使用 pnpm：pnpm docs:build
+      
+      ###
+      # 步骤 6：上传构建产物
+      # 将构建好的静态文件打包上传，供部署任务使用
+      ###
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # 指定要上传的目录
+          # VitePress 默认输出目录是 docs/.vitepress/dist
+          path: docs/.vitepress/dist
+  
+  ###
+  # 部署任务
+  # 将构建产物部署到 GitHub Pages
+  # 依赖于 build 任务完成
+  ###
+  deploy:
+    # 部署环境配置
+    environment:
+      name: github-pages                                      # 环境名称
+      url: ${{ steps.deployment.outputs.page_url }}         # 部署后的网站 URL
+    
+    # 依赖关系：必须等待 build 任务成功完成
+    needs: build
+    
+    # 运行环境
+    runs-on: ubuntu-latest
+    
+    # 任务名称
+    name: Deploy
+    
+    # 部署步骤
+    steps:
+      ###
+      # 部署到 GitHub Pages
+      # 这一步会自动将上传的构建产物部署到 Pages
+      ###
+      - name: Deploy to GitHub Pages
+        id: deployment                    # 步骤 ID，用于后续引用
+        uses: actions/deploy-pages@v4
