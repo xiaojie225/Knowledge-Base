@@ -68,7 +68,6 @@ jobs:
         with:
           node-version: 20           # 使用 Node.js 20 版本
           cache: npm                 # 启用 npm 缓存，加快安装速度
-          # 如果使用 pnpm，改为：cache: 'pnpm'
       
       ###
       # 步骤 3：配置 GitHub Pages
@@ -82,24 +81,14 @@ jobs:
       # 安装项目所需的 npm 包
       ###
       - name: Install dependencies
-        run: |
-          # npm ci 命令说明：
-          # - 比 npm install 更快、更可靠
-          # - 使用 package-lock.json 锁定版本
-          # - 适合 CI/CD 环境
-          npm ci
-          # 如果使用 pnpm：pnpm install --frozen-lockfile
+        run: npm ci
       
       ###
       # 步骤 5：构建 VitePress 项目
       # 将 Markdown 文件编译为静态 HTML
       ###
       - name: Build with VitePress
-        run: |
-          # 运行构建命令
-          # 会在 docs/.vitepress/dist 目录生成静态文件
-          npm run docs:build
-          # 如果使用 pnpm：pnpm docs:build
+        run: npm run docs:build
       
       ###
       # 步骤 6：上传构建产物
@@ -109,8 +98,8 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           # 指定要上传的目录
-          # VitePress 默认输出目录是 docs/.vitepress/dist
-          path: docs/.vitepress/dist
+          # 注意：VitePress 在根目录时，输出路径是 .vitepress/dist
+          path: .vitepress/dist
   
   ###
   # 部署任务
@@ -120,8 +109,8 @@ jobs:
   deploy:
     # 部署环境配置
     environment:
-      name: github-pages                                      # 环境名称
-      url: ${{ steps.deployment.outputs.page_url }}         # 部署后的网站 URL
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     
     # 依赖关系：必须等待 build 任务成功完成
     needs: build
@@ -139,5 +128,5 @@ jobs:
       # 这一步会自动将上传的构建产物部署到 Pages
       ###
       - name: Deploy to GitHub Pages
-        id: deployment                    # 步骤 ID，用于后续引用
+        id: deployment
         uses: actions/deploy-pages@v4
