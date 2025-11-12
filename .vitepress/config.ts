@@ -46,7 +46,7 @@ export default defineConfig({
    * 如果部署到 GitHub Pages 子目录，需要设置对应的路径
    * 例如：https://username.github.io/my-notes/ 则设置为 '/my-notes/'
    */
-  base: '/',
+  base: '/', 
   
   /**
    * 生成简洁 URL（移除 .html 后缀）
