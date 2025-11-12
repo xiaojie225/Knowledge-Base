@@ -49,7 +49,7 @@ export default defineConfig({
    * 访问地址是：https://xiaojie225.github.io/Knowledge-Base/
    * 所以 base 必须设置为 '/Knowledge-Base/'
    */
-  base: '/Knowledge-Base/',
+  base: '/',
   
   /**
    * 生成简洁 URL（移除 .html 后缀）
