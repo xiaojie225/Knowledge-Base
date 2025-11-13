@@ -47,7 +47,7 @@ export default defineConfig({
    * ⚠️ 重要修改：
    * 根据您的 GitHub 仓库名称 Knowledge-Base
    * 访问地址是：https://xiaojie225.github.io/Knowledge-Base/
-   * 所以 base 必须设置为 '/Knowledge-Base/'
+   * 所以 base 必须设置为 '/Knowledge-Base/' 
    */
   base: '/Knowledge-Base/',
   
