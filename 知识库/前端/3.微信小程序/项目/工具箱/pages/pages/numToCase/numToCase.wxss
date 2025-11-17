@@ -1,0 +1,67 @@
+.orig {
+    font-size: 80rpx;
+    text-align: right;
+}
+
+.word {
+    border-top: 1px solid #eee;
+    font-size: 60rpx;
+    position: relative;
+    text-align: left;
+}
+
+.wt {
+    position: absolute;
+    right: 0;
+    top: 0;
+}
+
+page {
+    color: #555;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.bg {
+    background: #eee;
+}
+
+.btns {
+    border-left: 1rpx solid #ccc;
+    border-top: 1rpx solid #ccc;
+    flex: 1;
+    flex-direction: column;
+    font-size: 17pt;
+}
+
+.btns,.btns>view {
+    display: flex;
+}
+
+.btns>view {
+    flex: 1;
+}
+
+.btns>view>view {
+    align-items: center;
+    border-bottom: 1rpx solid #ccc;
+    border-right: 1rpx solid #ccc;
+    box-sizing: border-box;
+    display: flex;
+    flex-basis: 25%;
+    justify-content: center;
+}
+
+.btns>view:last-child>view:first-child {
+    flex-basis: 50%;
+}
+
+.btns>view:first-child>view:last-child {
+    color: red;
+    flex-flow: 50%;
+}
+
+.share {
+    color: #fc8e00;
+}

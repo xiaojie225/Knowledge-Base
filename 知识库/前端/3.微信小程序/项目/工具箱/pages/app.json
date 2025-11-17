@@ -1,0 +1,103 @@
+{
+    "pages": [
+        "pages/index/index",
+        "pages/video/index",
+        "pages/numToCase/numToCase",  
+        "pages/tools/index",
+        "pages/yasuo/ad/index",
+        "pages/yasuo/yasuo",
+        "pages/dm/newDanMu",
+        "pages/color/color",
+        "pages/ruler/ruler",
+        "pages/figure/figure",
+        "pages/counter/counter",
+        "pages/daxiaoxie/daxiaoxie",
+        "pages/tax/tax",
+        "pages/myphone/myphone",
+        "pages/time/time",
+        "pages/clock/clock",
+        "pages/createQrcode/createQrcode",
+        "pages/joke/joke",
+        "pages/choujiang/choujiang",
+        "pages/vipvideo/vipvideo",
+        "pages/navigator/pintu/pintu/pintu",
+        "pages/navigator/pintu/cut/cut",
+        "pages/navigator/jiashuiyin/waterMark/waterMark",
+        "pages/navigator/jiashuiyin/waterMarkSet/waterMarkSet",
+        "pages/navigator/combine/combine",
+        "pages/navigator/combine/show",
+        "pages/navigator/pintu/wenzi/wenzi"
+    ],
+    "subPackages": [
+      {
+          "root": "pagesA/",
+          "pages": [
+            "pages/mm/mm",
+            "pages/protractor/protractor",
+            "pages/lovesc/lovesc",
+            "pages/imagepress/imagepress",
+            "pages/wzt/wzt",
+            "pages/time/time",
+            "pages/fly/fly",
+            "pages/album/index",
+            "pages/index/index",
+            "pages/mnld/mnld",
+            "pages/ld/ld",
+            "pages/24/24",
+            "pages/24/count",
+            "pages/dh/dh",
+            "pages/2048/2048",
+            "pages/success/index"
+          ]
+      },
+      {
+        "root": "pagesB/",
+        "pages": [
+          "pages/index/index",
+          "pages/zsz/zsz",
+          "pages/zsz/sz",
+          "pages/networkSpeed/networkSpeed",
+          "pages/blood/blood",
+          "pages/life_time/life_time",
+          "pages/blind/blind",
+          "pages/clock/clock",
+          "pages/see-img/see-img",
+          "pages/quse/index",
+          "pages/quse/color",
+          "pages/quse/detail",
+          "pages/randomNum/randomNum"
+                                           
+        ]
+    }
+    
+     
+  ],
+    "tabBar": {
+      "color": "#bfbfbf",
+      "selectedColor": "#ff4444",
+      "backgroundColor": "#FFFFFF",
+      "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页",
+        "iconPath": "./static/index-1.png",
+        "selectedIconPath": "./static/index.png"
+      },
+      {
+        "pagePath": "pages/tools/index",
+        "text": "更多",
+        "iconPath": "./static/gd-1.png",
+        "selectedIconPath": "./static/gd.png"
+      }
+    ]
+  },
+    "window": {
+        "backgroundTextStyle": "light",
+        "navigationBarBackgroundColor": "#fff",
+        "navigationBarTitleText": "十一云工具箱",
+        "navigationBarTextStyle": "black"
+    },
+    "style": "v2",
+    "sitemapLocation": "sitemap.json"
+}

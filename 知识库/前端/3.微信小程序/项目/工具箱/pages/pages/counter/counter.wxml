@@ -1,0 +1,23 @@
+<view class="all">
+    <view class="bottom">
+        <view bindtap="guiling" class="{{guiling?'active':0}}">归零</view>
+        <view bindtap="setting" class="setting {{setting?'active':0}}">设置</view>
+        <view bindtap="sorts" class="{{active1?'active':0}}">分组</view>
+        <view bindtap="sounds" class="{{active2?'active':0}}">音效</view>
+    </view>
+    <view class="slider" wx:if="{{setting}}">
+        <slider bindchanging="changenum" blockSize="12" max="10" min="1" showValue="true" step="1" value="{{num}}"></slider>
+    </view>
+    <view class="head">{{res}}</view>
+    <view bindtap="click1" class="mids" wx:if="{{active1==false}}">
+        <view>+{{num}}</view>
+    </view>
+    <view class="mid" wx:if="{{active1==true}}">
+        <view bindtap="click2">+{{num}}
+            <text class="xiaoji">      {{sn1}}</text>
+        </view>
+        <view bindtap="click3">+{{nums}}
+            <text class="xiaoji">      {{sn2}}</text>
+        </view>
+    </view>
+</view>

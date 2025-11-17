@@ -1,0 +1,32 @@
+<view class="page {{isIPX}} {{Android}}">
+
+    <view class="top-bar">
+       
+        <tag-swiper active="{{tagData.active}}" bindintap="inToggleTag" list="{{tagData.item}}"></tag-swiper>
+    </view>
+    <view class="content">
+
+
+ 
+        <scroll-view scrollY bindscrolltolower="inGetList" class="scroll-bar" hidden="{{!(tagData.active==0)}}">
+            <view class="wrap">
+                <view class="flex-bar flex-wrap item-img">
+                    <view class="col-6 opacity" wx:for="{{tagData.item[0].list}}" wx:key="{{index}}">
+                        <image bindtap="inToSeeImg" class="img" data-src="{{item.imageUrl}}" mode="aspectFill" src="{{item.imageUrl}}"></image>
+                    </view>
+                </view>
+            </view>
+            <g-loading mode="box" show="{{state.loading}}"></g-loading>
+        </scroll-view>
+        <scroll-view scrollY bindscrolltolower="inGetCategory" class="scroll-bar" hidden="{{!(tagData.active==index)}}" wx:if="{{index>0}}" wx:for="{{tagData.item}}" wx:key="{{index}}">
+            <view class="wrap">
+                <view class="flex-bar flex-wrap item-img">
+                    <view class="col-6 opacity" wx:for="{{item.list}}" wx:key="{{index}}">
+                        <image bindtap="inToSeeImg" class="img" data-src="{{item.imageUrl}}" mode="aspectFill" src="{{item.imageUrl}}"></image>
+                    </view>
+                </view>
+            </view>
+            <g-loading mode="box" show="{{tagData.item[tagData.active].load}}"></g-loading>
+        </scroll-view>
+    </view>
+</view>

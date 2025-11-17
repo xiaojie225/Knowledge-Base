@@ -1,0 +1,10 @@
+{
+    "enablePullDownRefresh": false,
+    "disableScroll": false,
+    "navigationBarTitleText": "图片压缩",
+    "navigationBarTextStyle": "black",
+    "usingComponents": {
+        "l-button": "../Components/lin/button/index",
+        "l-icon": "../Components/lin/icon/index"
+    }
+}

@@ -1,0 +1,9 @@
+{
+  "navigationBarTitleText": "二维码生成",
+  "usingComponents": {
+      "my-input": "/component/my-input/my-input",
+      "my-list-bar": "/component/my-list-bar/my-list-bar",
+      "my-color-select": "/component/my-color-select/my-color-select",
+      "my-button": "/component/my-button/my-button"
+  }
+}

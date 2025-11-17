@@ -1,0 +1,8 @@
+<view catchtouchmove="doNothingMove" class="container-popup {{show?'popup-show':''}}   {{'l-popup-'+contentAlign}}  " style="z-index:{{zIndex}}; ">
+    <view class="container-bg"></view>
+    <view catchtap="onPupopTap" class="popup-content {{show?contentAlign:''}}   popup-fade-{{show?contentAlign:''}}-active-{{animation}}  popup-class">
+        <view catchtap="doNothingTap">
+            <slot></slot>
+        </view>
+    </view>
+</view>

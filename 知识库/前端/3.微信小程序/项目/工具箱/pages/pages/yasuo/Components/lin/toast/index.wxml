@@ -1,0 +1,8 @@
+<view class="container" hidden="{{!status}}" style="z-index:{{zIndex}}">
+    <view class="toast-bg" wx:if="{{mask}}"></view>
+    <view class="toast toast-{{placement||'bottom'}}" style="padding-top:{{(placement||'bottom')==='bottom'?image||icon?'25rpx':'':''}};position:relative;left:{{offsetX}}rpx;top:{{offsetY}}rpx">
+        <image class="toast-icon" src="{{image}}" style="width:{{imageW}}rpx;height:{{imageH}}rpx" wx:if="{{image}}"></image>
+        <l-icon class="toast-icon toast-icon-{{icon==='loading'?'loading':''}}" color="{{color?color:icon==='success'?'#00C292':icon==='error'?'#F4516C':'#ffffff'}}" name="{{icon}}" size="{{size?size:60}}" wx:elif="{{icon&&!image}}"></l-icon>
+        <text class="toast-text  toast-text-{{placement}}" style="{{placement||'bottom'==='bottom'?icon||image?'margin-top:10rpx; width:180rpx':'':''}}">{{title}}</text>
+    </view>
+</view>

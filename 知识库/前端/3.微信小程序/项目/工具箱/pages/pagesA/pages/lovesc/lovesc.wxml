@@ -1,0 +1,32 @@
+
+<view class="bg-gray">
+
+    <view class="padding">
+    
+        <view class="cu-form-group bg-white" style="border-radius:20rpx">
+            <textarea bindinput="bindKeyInput" disabled="{{modalName!=null}}" maxlength="10000" placeholder="请输入需转换的文字，点击一键生成后再点击下方对应样式即可复制"  value="{{inputData}}"></textarea>
+        </view>
+    </view>
+    <view style="overflow:hidden">
+        
+            <button bindtap="clear" class="button_compress">清空内容</button>
+       
+    
+            <button  bindtap="checkmsg" class="button_compress"  data-value="{{inputData}}">一键生成</button>
+ 
+    </view>
+    <scroll-view scrollY class="bg-white" style="height: calc(100% - 480rpx);position:fixed; bottom: 0;left: 0;">
+        <view  wx:if="{{appConfig.ad.wxcustom}}">
+      <ad-custom unit-id="{{appConfig.ad.wxcustom}}" ></ad-custom>
+    </view>
+    <view wx:for="{{dataList}}" wx:key="unique">
+                    <view>
+                        <text class="view-text">{{index+1}}</text>
+                    </view>
+                    <view bindtap="selectData" class="{{lastIndex==index?'button-selected':'button-show'}}" data-index="{{index}}" data-value="{{item}}">
+                        <text decode="{{true}}" space="{{true}}">{{item}}</text>
+                       
+                    </view>
+                </view>
+    </scroll-view>
+</view>

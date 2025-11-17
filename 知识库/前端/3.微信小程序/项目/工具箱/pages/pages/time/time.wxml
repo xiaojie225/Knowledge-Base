@@ -1,0 +1,26 @@
+<view class="top">
+    <text>{{year}}</text>年
+  <text>{{month}}</text>月
+  <text>{{day}}</text>日
+</view>
+<view class="all">
+    <view class="first">{{year}}年已经流逝了</view>
+    <view class="time">{{ypencent}}%</view>
+    <view class="tu">
+        <progress activeColor="#ff4444" backgroundColor="#a7a4a4" borderRadius="10" class="progress" percent="{{ypencent}}" strokeWidth="20"></progress>
+    </view>
+</view>
+<view class="all">
+    <view class="first">{{month}}月已经流逝了</view>
+    <view class="time">{{mpencent}}%</view>
+    <view class="tu">
+        <progress activeColor="#ff4444" backgroundColor="#a7a4a4" borderRadius="10" class="progress" percent="{{mpencent}}" strokeWidth="20"></progress>
+    </view>
+</view>
+<view class="all">
+    <view class="first">{{day}}日已经流逝了</view>
+    <view class="time">{{dpencent}}%</view>
+    <view class="tu">
+        <progress activeColor="#ff4444" backgroundColor="#a7a4a4" borderRadius="10" class="progress" percent="{{dpencent}}" strokeWidth="20"></progress>
+    </view>
+</view>

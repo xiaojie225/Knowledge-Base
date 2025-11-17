@@ -1,0 +1,3 @@
+<canvas canvasId="myCanvas" style="width: {{imageWidth}}px; height: {{imageHeight}}px;"></canvas>
+<button bindtap="saveTap" class="butss">保存图片</button>
+

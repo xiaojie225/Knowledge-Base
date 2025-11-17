@@ -1,0 +1,39 @@
+.top {
+    color: #ff4444;
+    font-size: 20px;
+    padding-left: 10vw;
+    width: 90vw;
+}
+
+.all {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    height: 20vh;
+    justify-content: space-between;
+    margin: 6vh 0 0;
+}
+
+.first {
+    font-size: 20px;
+    height: 10vh;
+}
+
+.time {
+    font-size: 36px;
+}
+
+.time,.tu {
+    height: 10vh;
+}
+
+.tu {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    width: 80%;
+}
+
+.progress {
+    width: 100%;
+}

@@ -1,0 +1,29 @@
+.container,scroll-view {
+  height: 100%;
+  width: 100%;
+}
+
+scroll-view {
+  background: #fff;
+  box-sizing: border-box;
+}
+
+.doMarkView,scroll-view {
+  display: flex;
+  flex-direction: column;
+}
+
+.doMarkView {
+  align-items: center;
+  background:#ff4444;
+  border-radius: 5px;
+  box-shadow: 0 2px 2px 0 rgba(204,221,221,.87);
+  color: #fff;
+  font-size: 30rpx;
+  height: 80rpx;
+  justify-content: center;
+  margin-bottom: 40rpx;
+  margin-left: 40rpx;
+  margin-top: 40rpx;
+  width: 90%;
+}
