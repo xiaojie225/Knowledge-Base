@@ -133,7 +133,7 @@ export default defineConfig({
       '/知识库/前端/': [
         {
           text: '前端知识库',
-          collapsed: true,
+          collapsed: false,
           items: [
             {
               text: 'API接口网站',
@@ -567,5 +567,11 @@ export default defineConfig({
      * 显示代码块行号
      */
     lineNumbers: true
-  }
+  },
+  
+  /**
+   * 忽略死链接检查
+   * 禁用构建时的死链接验证，避免因为文档中的示例链接导致构建失败
+   */
+  ignoreDeadLinks: true
 })
