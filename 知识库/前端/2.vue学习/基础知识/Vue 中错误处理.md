@@ -1,395 +1,839 @@
+# Vue 错误处理精华学习资料
 
-## **开发文档：Vue 3 项目稳健性基石 - 全方位错误处理策略**
+## 📚 日常学习模式
 
-本文档旨在提供一个现代化、可复用、可扩展的Vue 3项目错误处理解决方案。
+**[标签: Vue错误处理, errorHandler, onErrorCaptured, 异常监控]**
 
-### **一、核心知识总结**
+### 核心概念
 
-Vue项目中的错误主要分为两类：**后端接口错误**和**前端代码逻辑错误**。我们的目标是捕获所有预料之外的异常，进行统一处理（如日志上报、用户提示），保证应用的健壮性。
+Vue 项目中的错误分为两大类：
+- **后端接口错误**：API请求失败、网络异常、服务器错误
+- **前端逻辑错误**：组件渲染错误、业务逻辑异常、第三方库错误
 
-### **二、用途与适用场景**
+**错误处理的三层防御体系：**
+1. **全局捕获层**：app.config.errorHandler（Vue组件错误） + window事件（Promise/全局错误）
+2. **局部隔离层**：ErrorBoundary组件（错误边界）
+3. **业务处理层**：try-catch + API拦截器
 
-本方案适用于所有Vue 3项目，尤其是在以下场景中至关重要：
+### 核心API对比
 
-*   **生产环境监控**: 及时发现并定位线上用户的代码异常。
-*   **提升用户体验**: 当应用发生故障时，向用户展示友好的提示界面，而不是白屏或崩溃。
-*   **保护关键业务流程**: 在支付、表单提交等关键模块，通过错误边界防止局部错误导致整个页面瘫痪。
+| API | 作用范围 | 使用场景 | 错误传播 |
+|-----|---------|---------|---------|
+| **app.config.errorHandler** | 全局应用级 | 最后防线，捕获所有未处理的组件错误 | 所有错误最终到达这里 |
+| **onErrorCaptured** | 组件级（子孙组件） | 局部错误隔离，实现错误边界 | 返回false阻止向上传播 |
+| **window.onerror** | 全局JS错误 | 捕获非Vue代码的运行时错误 | 浏览器默认行为 |
+| **unhandledrejection** | 全局Promise | 捕获未处理的Promise rejection | 浏览器默认行为 |
 
-### **三、完整解决方案与代码示例**
-
-我们将构建一个包含三个核心部分的模块化解决方案。
-
-#### **1. 错误上报服务 (`src/services/errorLogService.js`)**
-
-这个模块遵循**单一职责原则(SRP)**，专门负责将错误信息发送到监控后端。
+### 实现架构
 
 ```javascript
-// src/services/errorLogService.js
+/**
+ * 错误处理架构
+ * 
+ * 层次1: 全局捕获（main.js）
+ *   ├─ app.config.errorHandler → Vue组件错误
+ *   ├─ window.unhandledrejection → Promise异常
+ *   └─ window.onerror → 全局JS错误
+ * 
+ * 层次2: 局部隔离（ErrorBoundary.vue）
+ *   └─ onErrorCaptured → 子组件错误边界
+ * 
+ * 层次3: 业务处理
+ *   ├─ axios拦截器 → API错误统一处理
+ *   └─ try-catch → 业务逻辑错误
+ */
 
 /**
- * 模拟一个错误日志上报服务
- * @param {Error} err - 错误对象
- * @param {string} info - Vue提供的特定错误信息，如生命周期钩子名称
- * @param {any} vm - (可选) 发生错误的组件实例
+ * 1. 错误上报服务（单一职责）
+ * 文件：src/services/errorLogService.js
  */
 export function logErrorToServer(err, info, vm = null) {
-  // KISS原则: 保持上报逻辑的简洁和专注
-  // OCP原则: 这里是扩展点，未来可以轻松替换为Sentry, LogRocket等服务
-  console.group('%c[错误日志上报]', 'color: red; font-weight: bold;');
-  console.error('错误信息 (Error):', err);
-  console.log('Vue 特定信息 (Info):', info);
-  if (vm) {
-    console.log('出错组件实例 (Component):', vm);
-  }
+  // 提取关键信息
+  const errorLog = {
+    message: err.message,
+    stack: err.stack,
+    info,  // Vue特定信息（如生命周期钩子名）
+    componentName: vm?.$options?.name,
+    timestamp: new Date().toISOString(),
+    // 环境信息
+    userAgent: navigator.userAgent,
+    url: window.location.href
+  };
 
-  // 在真实项目中，这里会是API调用，将错误信息发送到后端或第三方服务
-  // const payload = {
-  //   message: err.message,
-  //   stack: err.stack,
-  //   info,
-  //   //...其他环境信息，如 userAgent, pageUrl, userId
-  // };
-  // fetch('/api/log-error', { method: 'POST', body: JSON.stringify(payload) });
-
+  console.group('%c[错误上报]', 'color: red; font-weight: bold;');
+  console.error('错误信息:', err);
+  console.log('Vue信息:', info);
+  console.log('组件实例:', vm);
   console.groupEnd();
+
+  // 实际项目中发送到监控服务
+  // fetch('/api/log-error', {
+  //   method: 'POST',
+  //   body: JSON.stringify(errorLog)
+  // });
 }
-```
 
-#### **2. 全局错误处理器 (`src/main.js`)**
-
-这是捕获全局未处理异常的最后一道防线。
-
-```javascript
-// src/main.js
+/**
+ * 2. 全局错误处理配置
+ * 文件：src/main.js
+ */
 import { createApp } from 'vue';
-import App from './App.vue';
 import { logErrorToServer } from './services/errorLogService';
 
 const app = createApp(App);
 
-// Vue 3 全局错误处理器
-// YAGNI原则: 只实现当前阶段最核心的全局捕获逻辑
+// Vue组件错误全局处理器
 app.config.errorHandler = (err, instance, info) => {
-  // instance 是组件实例, info 是Vue特定的错误信息
-  console.error('触发全局错误处理器 errorHandler');
+  console.error('[全局errorHandler]捕获到错误');
   logErrorToServer(err, info, instance);
 
-  // 这里可以添加全局UI提示，例如使用一个Toast组件
-  // showGlobalErrorToast('应用发生了一个未知错误');
+  // 可选：显示全局错误提示
+  // showGlobalToast('系统发生错误，请稍后重试');
 };
 
-// 捕获Promise未处理的 rejection (例如 async 函数中的异常)
+// Promise未处理的rejection
 window.addEventListener('unhandledrejection', (event) => {
-  console.error('触发 unhandledrejection');
-  if (event.reason instanceof Error) {
-    logErrorToServer(event.reason, 'Unhandled Promise Rejection');
-  } else {
-    logErrorToServer(new Error(String(event.reason)), 'Unhandled Promise Rejection');
-  }
+  console.error('[unhandledrejection]捕获Promise错误');
+  const error = event.reason instanceof Error 
+    ? event.reason 
+    : new Error(String(event.reason));
+  logErrorToServer(error, 'Unhandled Promise Rejection');
+  event.preventDefault(); // 阻止浏览器默认行为
 });
 
+// 全局JS错误（可选，作为补充）
+window.onerror = (message, source, lineno, colno, error) => {
+  console.error('[window.onerror]捕获全局错误');
+  if (error) {
+    logErrorToServer(error, `Global Error at ${source}:${lineno}:${colno}`);
+  }
+  return true; // 阻止浏览器默认错误提示
+};
 
 app.mount('#app');
-```
 
-#### **3. 错误边界组件 (`src/components/ErrorBoundary.vue`)**
+/**
+ * 3. 错误边界组件
+ * 文件：src/components/ErrorBoundary.vue
+ */
+// <template>
+//   <div v-if="hasError" class="error-boundary">
+//     <h3>⚠️ 组件出现问题</h3>
+//     <p>{{ errorMessage }}</p>
+//     <button @click="resetError">重试</button>
+//     <button @click="reportError">报告问题</button>
+//   </div>
+//   <slot v-else></slot>
+// </template>
 
-这是一个强大的组件，用于“包裹”可能出错的子组件，实现优雅降级。这体现了**DRY**和**KISS**原则。
-
-```vue
-<!-- src/components/ErrorBoundary.vue -->
-<template>
-  <div v-if="hasError" class="error-boundary">
-    <h3>糟糕，组件出现了一些问题。</h3>
-    <p>我们已经记录了该问题，并将尽快修复。</p>
-    <button @click="resetError">重试</button>
-  </div>
-  <slot v-else></slot>
-</template>
-
-<script setup>
 import { ref, onErrorCaptured } from 'vue';
 import { logErrorToServer } from '@/services/errorLogService';
 
 const hasError = ref(false);
+const errorMessage = ref('');
+let capturedError = null;
 
-// 使用Vue 3 Composition API的 onErrorCaptured 钩子
+// 捕获子孙组件的错误
 onErrorCaptured((err, instance, info) => {
-  console.error("ErrorBoundary 捕获到错误");
-  hasError.value = true;
+  console.error('[ErrorBoundary]捕获子组件错误');
 
-  // 调用统一的服务进行上报
+  hasError.value = true;
+  errorMessage.value = err.message;
+  capturedError = err;
+
+  // 上报错误
   logErrorToServer(err, info, instance);
 
-  // 返回 false 表示错误已经被处理，不会再向上传播到全局处理器
-  // 这使得我们可以对特定区域的错误进行局部处理
-  return false; 
+  // 返回false阻止错误继续向上传播
+  return false;
 });
 
 const resetError = () => {
   hasError.value = false;
+  errorMessage.value = '';
+  capturedError = null;
 };
-</script>
 
-<style scoped>
-.error-boundary {
-  padding: 1rem;
-  border: 1px solid #ff4d4f;
-  background-color: #fff1f0;
-  color: #cf1322;
-}
-</style>
-```
-
-#### **4. 示例：使用错误边界和制造错误**
-
-下面是一个演示如何在应用中使用`ErrorBoundary`的父组件，以及一个会故意出错的子组件。
-
-*   **制造错误的子组件 (`src/components/BuggyCounter.vue`)**
-
-```vue
-<!-- src/components/BuggyCounter.vue -->
-<template>
-  <div>
-    <p>计数器: {{ count }}</p>
-    <button @click="increment">增加</button>
-  </div>
-</template>
-
-<script setup>
-import { ref } from 'vue';
-
-const count = ref(0);
-
-const increment = () => {
-  if (count.value === 3) {
-    // 故意制造一个运行时错误
-    throw new Error('我是一个故意的错误!');
+const reportError = () => {
+  if (capturedError) {
+    // 可以打开反馈表单等
+    alert('错误已报告，感谢您的反馈');
   }
-  count.value++;
 };
-</script>
+
+/**
+ * 4. Axios统一错误处理
+ * 文件：src/utils/request.js
+ */
+import axios from 'axios';
+import { logErrorToServer } from '@/services/errorLogService';
+
+const request = axios.create({
+  baseURL: '/api',
+  timeout: 10000
+});
+
+// 请求拦截器
+request.interceptors.request.use(
+  config => config,
+  error => {
+    logErrorToServer(error, 'Request Error');
+    return Promise.reject(error);
+  }
+);
+
+// 响应拦截器
+request.interceptors.response.use(
+  response => response.data,
+  error => {
+    // 统一处理HTTP错误
+    const status = error.response?.status;
+    const errorMap = {
+      401: '未授权，请重新登录',
+      403: '拒绝访问',
+      404: '请求的资源不存在',
+      500: '服务器内部错误',
+      502: '网关错误',
+      503: '服务不可用'
+    };
+  
+    const message = errorMap[status] || '网络请求失败';
+  
+    // 上报错误
+    logErrorToServer(
+      error,
+      `API Error: ${error.config?.url} - ${status}`
+    );
+  
+    // 显示用户友好提示
+    // showToast(message);
+  
+    return Promise.reject(error);
+  }
+);
+
+export default request;
+
+/**
+ * 5. 可复用的安全请求Hook
+ * 文件：src/composables/useSafeRequest.js
+ */
+import { logErrorToServer } from '@/services/errorLogService';
+
+export function useSafeRequest(asyncFn, fallbackValue = null) {
+  return async (...args) => {
+    try {
+      return await asyncFn(...args);
+    } catch (error) {
+      // 记录错误但不中断流程
+      logErrorToServer(
+        error,
+        `useSafeRequest: ${asyncFn.name || 'anonymous'}`
+      );
+    
+      // 返回降级值
+      return fallbackValue;
+    }
+  };
+}
+
+// 使用示例
+import { useSafeRequest } from '@/composables/useSafeRequest';
+
+const fetchUserData = async (userId) => {
+  const res = await request.get(`/users/${userId}`);
+  return res.data;
+};
+
+// 包装为安全请求，失败时返回空对象
+const safeFetchUser = useSafeRequest(fetchUserData, {});
+
+// 在组件中使用
+const userData = await safeFetchUser(123);
 ```
 
-*   **使用`ErrorBoundary`的父组件 (`src/App.vue`)**
+### 使用场景最佳实践
 
+**场景1：关键业务模块保护**
 ```vue
-<!-- src/App.vue -->
-<template>
-  <div id="app">
-    <h1>Vue 3 错误处理示例</h1>
-    <hr />
-  
-    <h2>使用 ErrorBoundary 包裹的组件:</h2>
-    <ErrorBoundary>
-      <BuggyCounter />
-    </ErrorBoundary>
-  
-    <hr />
-  
-    <h2>没有 ErrorBoundary 包裹的组件:</h2>
-    <p>当下方组件出错时，错误将被全局errorHandler捕获。</p>
-    <BuggyCounter />
-  </div>
-</template>
+<!-- 支付表单，出错不应影响其他功能 -->
+<ErrorBoundary>
+  <PaymentForm />
+</ErrorBoundary>
 
-<script setup>
-import ErrorBoundary from './components/ErrorBoundary.vue';
-import BuggyCounter from './components/BuggyCounter.vue';
-</script>
-
-<style>
-#app { font-family: Avenir, Helvetica, Arial, sans-serif; padding: 20px; }
-hr { margin: 20px 0; }
-</style>
+<!-- 商品列表，出错不应影响导航栏 -->
+<ErrorBoundary>
+  <ProductList />
+</ErrorBoundary>
 ```
 
-**运行结果说明：**
-当你点击第一个“增加”按钮到第4次时（`count`变为3时触发错误），`ErrorBoundary`会捕获错误并显示其内部的降级UI。控制台会打印`ErrorBoundary 捕获到错误`。
-当你点击第二个“增加”按钮到第4次时，由于没有`ErrorBoundary`，错误会继续向上传播，最终被`main.js`中配置的全局`app.config.errorHandler`捕获。控制台会打印`触发全局错误处理器errorHandler`。
+**场景2：异步数据加载**
+```javascript
+import { ref, onMounted } from 'vue';
+import { useSafeRequest } from '@/composables/useSafeRequest';
+
+const loading = ref(false);
+const error = ref(null);
+const data = ref(null);
+
+const fetchData = async () => {
+  loading.value = true;
+  error.value = null;
+
+  try {
+    data.value = await request.get('/data');
+  } catch (err) {
+    error.value = err.message;
+    // 错误已被axios拦截器上报
+  } finally {
+    loading.value = false;
+  }
+};
+
+// 提供重试功能
+const retry = () => fetchData();
+
+onMounted(fetchData);
+```
+
+**场景3：第三方脚本隔离**
+```javascript
+// 加载第三方SDK时捕获错误
+const loadThirdPartySDK = async () => {
+  try {
+    await import('third-party-sdk');
+  } catch (error) {
+    logErrorToServer(
+      error,
+      'Third Party SDK Load Failed'
+    );
+    // 使用降级方案
+    return mockSDK;
+  }
+};
+```
+
+### 关键知识点
+
+1. **错误传播链**：
+   - 子组件 → onErrorCaptured(返回false停止) → 父组件onErrorCaptured → ... → app.config.errorHandler
+
+2. **Promise错误独立处理**：
+   - async/await中的错误不会被errorHandler捕获
+   - 必须监听unhandledrejection事件
+
+3. **错误边界返回值**：
+   - onErrorCaptured返回false：错误不再向上传播
+   - 不返回或返回其他值：错误继续冒泡
+
+4. **Source Map的重要性**：
+   - 生产环境的压缩代码难以定位
+   - 配置source map上传到监控平台实现源码定位
+
+5. **用户体验优先原则**：
+   - 错误提示要清晰友好（避免技术术语）
+   - 提供明确的操作指引（重试/返回/联系客服）
+   - 保留用户已输入的数据
 
 ---
 
-### **四、面试官考察**
+## ⚡ 面试突击模式
 
-如果你是我团队的面试者，我会这样考察你对Vue错误处理的理解深度和广度。
+### [Vue 错误处理] 面试速记
 
-#### **技术知识题 (10题)**
+#### 30秒电梯演讲
 
-1.  **问题:** 在Vue 3中，你通常会在哪里配置全局错误处理器？请写出相关代码。
-    *   **答案:** 通常在项目入口文件 `main.js` 中，通过 `app.config.errorHandler` 进行配置。
-        ```javascript
-        import { createApp } from 'vue';
-        const app = createApp(App);
-        app.config.errorHandler = (err, instance, info) => {
-          console.log('Global error:', err);
-        };
-        ```
+"Vue错误处理采用三层防御：全局层通过app.config.errorHandler和window事件捕获所有未处理异常；局部层使用ErrorBoundary组件实现错误隔离和优雅降级；业务层通过axios拦截器和try-catch处理具体场景。核心是错误冒泡机制：子组件错误会向上传播，onErrorCaptured可以中断传播，最终未处理的错误到达全局处理器。"
 
-2.  **问题:** `onErrorCaptured` 和 `app.config.errorHandler` 有什么区别和联系？
-    *   **答案:**
-        *   **区别:** `onErrorCaptured`是组件级别的钩子，只捕获其子孙组件的错误。`errorHandler`是应用级别的，捕获所有未被`onErrorCaptured`处理的组件错误。
-        *   **联系:** 错误会从子组件向上冒泡。如果 `onErrorCaptured` 钩子存在，它会先被触发。如果它返回 `false`，则错误传播停止；否则，错误会继续冒泡，最终到达全局的 `errorHandler`。
+---
 
-3.  **问题:** 为什么在 `main.js` 中我们除了配置 `errorHandler`，通常还会监听 `window.unhandledrejection` 事件？
-    *   **答案:** 因为 `errorHandler` 主要捕获Vue组件生命周期和渲染过程中的同步错误。对于 `Promise` 中未被 `.catch()` 捕获的异步错误（例如 `async/await` 函数内部的异常），`errorHandler` 无法捕获。`unhandledrejection` 事件专门用于捕获这类未处理的Promise拒绝。
+### 高频考点（必背）
 
-4.  **问题:** 请解释 "错误边界 (Error Boundary)" 组件的设计思想及其在Vue中的实现方式。
-    *   **答案:** 错误边界是一种组件设计模式，它能捕获其子组件树中发生的JavaScript错误，记录这些错误，并显示一个降级UI，而不是让整个组件树崩溃。在Vue 3中，通过在父组件的 `<script setup>` 中使用 `onErrorCaptured` 钩子来实现。
+**考点1: errorHandler vs onErrorCaptured**
+- errorHandler是应用级全局处理器，捕获所有未处理的组件错误
+- onErrorCaptured是组件级钩子，只捕获子孙组件错误，返回false可阻止向上传播
+- 错误从子组件向上冒泡：子组件 → 各层onErrorCaptured → errorHandler
 
-5.  **问题:** 如果一个错误同时被子组件的父组件和祖父组件的 `onErrorCaptured` 捕获，执行顺序是怎样的？如何阻止错误继续传播？
-    *   **答案:** 执行顺序是从下到上，即先触发父组件的 `onErrorCaptured`，然后是祖父组件的。在任何一层的 `onErrorCaptured` 钩子中 `return false;` 就可以阻止错误继续向上传播。
+**考点2: Promise异常为何需要单独处理**
+- errorHandler只捕获Vue组件同步错误和生命周期错误
+- async/await中的异常是Promise rejection，不会触发errorHandler
+- 必须监听window.unhandledrejection事件捕获未处理的Promise异常
 
-6.  **问题:** 你如何统一处理项目中所有`axios`请求的API错误，比如统一处理401（未授权）状态码？
-    *   **答案:** 通过`axios`的响应拦截器（`interceptors.response`）。
-        ```javascript
-        axios.interceptors.response.use(
-          response => response,
-          error => {
-            if (error.response?.status === 401) {
-              // 跳转到登录页面
-              router.push('/login');
-            }
-            return Promise.reject(error);
-          }
-        );
-        ```
+**考点3: 错误边界的设计原则**
+- 隔离关键业务模块，防止局部错误导致整体崩溃
+- 提供降级UI，保证核心功能可用
+- 实现方式：父组件用onErrorCaptured捕获子组件错误，返回false停止传播
 
-7.  **问题:** 在Composition API中，如果我想在某个特定的业务逻辑函数（非组件生命周期）中捕获并上报错误，你会怎么做？(提示：代码复用)
-    *   **答案:** 最佳实践是创建一个 `composable` 函数，封装 `try...catch` 逻辑和错误上报服务。
-        ```javascript
-        // composables/useRequest.js
-        import { logErrorToServer } from '@/services/errorLogService';
-        export function useSafeRequest(asyncFn) {
-          return async (...args) => {
-            try {
-              return await asyncFn(...args);
-            } catch (err) {
-              logErrorToServer(err, 'useSafeRequest');
-              // 可以选择返回一个特定错误状态或重新抛出
-              return { error: true, data: null };
-            }
-          };
-        }
-      
-        // 在组件中使用
-        const safeFetchUserData = useSafeRequest(fetchUserDataApi);
-        ```
+**考点4: 错误上报的架构设计**
+- 单一职责：错误上报封装为独立service，便于切换监控服务
+- 关键信息：错误堆栈、组件信息、用户信息、环境信息
+- 上报时机：errorHandler、onErrorCaptured、axios拦截器、window事件
 
-8.  **问题:** 为什么在错误处理函数中上报日志时，最好将其封装成一个独立的`service`模块？
-    *   **答案:** 这是遵循**SOLID**设计原则，特别是**单一职责原则(SRP)**和**开放/封闭原则(OCP)**。`service`模块负责“如何上报”，组件或钩子负责“何时捕获”。当上报方式需要改变时（比如从console.log换成Sentry），只需修改`service`模块，无需改动任何业务组件代码，提高了代码的可维护性和可扩展性。
+**考点5: 生产环境错误定位**
+- 代码压缩后错误堆栈难以阅读
+- 配置source map映射到源代码
+- 监控平台（Sentry等）自动解析source map还原错误位置
 
-9.  **问题:** Vue 2中的 `errorCaptured` 和 Vue 3 Composition API中的 `onErrorCaptured` 有什么不同？
-    *   **答案:** 功能上基本相同，都是捕获子孙组件的错误。主要区别在于用法：`errorCaptured`是Options API中的一个选项，与`data`, `methods`平级。`onErrorCaptured`是Composition API中的一个函数，需要在 `setup` 或 `<script setup>` 上下文中调用。
+---
 
-10. **问题:** source map 在前端错误监控中扮演什么角色？为什么生产环境部署时需要它？
-    *   **答案:** `source map` 是一个信息文件，它映射了转换后（压缩、混淆）的代码与源代码之间的关系。在生产环境中，我们的代码通常是经过构建工具处理的，错误堆栈信息显示的是转换后代码的行号和列号，难以定位问题。通过 `source map`，错误监控系统可以将这些信息还原为源代码中的位置，从而帮助开发者快速、准确地定位到出错的原始代码。
+### 经典面试题
 
-#### **业务逻辑题 (10题)**
+#### 题目1: 请说明Vue中错误的完整传播路径
 
-1.  **场景:** 一个展示用户信息的页面，获取用户信息的API请求失败了。你如何设计，既要提示用户“加载失败”，又要提供一个“重试”按钮？
-    *   **答案:** 在组件中用 `ref` 维护一个状态（如 `loading`, `error`, `userData`）。在 `onMounted` 中发起请求，用 `try...catch` 包裹 `await`。`catch`块中，将 `error` 状态设为true，并显示错误提示和重试按钮。重试按钮的点击事件会重新调用请求数据的方法。
-        ```vue
-        <template>
-          <div v-if="loading">加载中...</div>
-          <div v-else-if="error">
-            加载失败 <button @click="fetchData">重试</button>
-          </div>
-          <div v-else>{{ userData }}</div>
-        </template>
-        <script setup>
-        const loading = ref(true);
-        const error = ref(null);
-        const fetchData = async () => { /* ... */ };
-        </script>
-        ```
+**思路**: 从错误发生到最终处理的完整生命周期
 
-2.  **场景:** 一个复杂的表单页面，有多个区域，每个区域由一个子组件负责。如果其中一个子组件（如“地址选择器”）因数据异常而崩溃，如何保证其他表单区域（如“基本信息”）仍然可用，且不会丢失用户已输入的数据？
-    *   **答案:** 使用 "错误边界 (Error Boundary)" 组件。将每个独立的、可能出错的子组件用 `<ErrorBoundary>` 包裹起来。这样，当“地址选择器”崩溃时，只有它自己会被替换为降级UI，而表单的其他部分不受影响。
+**答案**:
+当Vue组件中发生错误时，传播路径如下：
+1. 错误首先在发生错误的组件内部抛出
+2. 向上冒泡到父组件的onErrorCaptured钩子（如果存在）
+3. 继续向上传播到祖父组件的onErrorCaptured（如果父组件的钩子未返回false）
+4. 依次向上，直到根组件
+5. 如果所有onErrorCaptured都未返回false，最终到达app.config.errorHandler
+6. 如果errorHandler也未处理，错误会被浏览器默认处理（控制台报错）
 
-3.  **场景:** 用户在进行一个多步骤操作（如向导式创建），在第三步提交时后台返回错误。除了给用户提示外，从产品体验角度看，还需要做什么？
-    *   **答案:**
-        1.  **明确提示**: 告知用户是哪一步出了什么问题（例如：“服务器保存失败，请稍后重试”）。
-        2.  **保留现场**: 不能让用户的当前页面刷新或跳转，已填写的数据应保留在表单中。
-        3.  **提供操作**: 提供“重试”按钮。如果重试依然失败，可以提供“返回上一步”或“保存草稿”的选项。
-        4.  **自动上报**: 无需用户操作，自动将详细错误信息上报到监控系统。
+关键点：任何一层的onErrorCaptured返回false，传播链立即中断。
 
-4.  **场景:** 我们的应用内嵌在一个WebView中，需要和原生App进行通信(JSBridge)。如果调用原生方法时发生错误（如方法不存在或原生执行失败），如何捕获并优雅处理？
-    *   **答案:** 通常JSBridge的调用是异步的，会返回一个`Promise`或使用回调函数。应该始终对返回的`Promise`使用`.catch()`，或在回调函数中检查错误参数。可以封装一个通用的`callNative`函数，内置`try...catch`和超时处理，对所有原生调用进行统一的错误管理。
+**代码框架**:
+```javascript
+/**
+ * 错误传播演示
+ * 组件层级：GrandParent > Parent > Child
+ */
 
-5.  **场景:** 一个实时数据看板，通过WebSocket接收数据并更新图表。如果某次接收到的数据格式错误，导致图表渲染库抛出异常，如何设计才能让看板不中断，并能自动恢复？
-    *   **答案:**
-        1.  **数据校验**: 在收到WebSocket消息后，渲染图表前，先对数据格式进行校验。如果格式不符，则丢弃该条消息并上报一个警告级别的日志，而不是直接传递给渲染库。
-        2.  **错误边界**: 将每个图表组件用`<ErrorBoundary>`包裹。即使校验疏漏导致某个图表崩溃，也只会影响该图表，不会影响整个看板。`ErrorBoundary`的重试按钮可以触发图表重新拉取初始化数据。
+// 子组件：错误发生源
+const Child = {
+  setup() {
+    const triggerError = () => {
+      throw new Error('Child组件故意的错误');
+    };
+    return { triggerError };
+  },
+  template: '<button @click="triggerError">触发错误</button>'
+};
 
-6.  **场景:** 一个图片上传组件，上传失败的可能原因有很多（网络中断、服务器拒绝、文件过大、格式不支持）。如何向用户展示清晰、有针对性的错误提示？
-    *   **答案:** 在`axios`的错误拦截器或上传逻辑的`catch`块中，详细解析`error`对象。根据`error.response.status`（如413表示文件过大，415表示格式不支持）或后端返回的`error.response.data.errorCode`来匹配预设的错误文案，给用户最精确的提示。
+// 父组件：第一层错误捕获
+const Parent = {
+  setup() {
+    onErrorCaptured((err, instance, info) => {
+      console.log('[Parent] 捕获到子组件错误:', err.message);
+    
+      // 决策点：是否继续向上传播
+      // return false; // 返回false阻止传播
+      // 不返回或返回其他值，错误继续向上
+    });
+    return {};
+  },
+  components: { Child },
+  template: '<div><h3>Parent</h3><Child /></div>'
+};
 
-7.  **场景:** 在`onMounted`钩子中，有三个互不依赖的API请求需要并行发起。如果其中一个失败了，但其他两个成功了，页面应该如何展示？
-    *   **答案:** 使用 `Promise.allSettled()`。它会等待所有Promise都完成（无论是resolved还是rejected）。然后遍历结果数组，对成功的结果进行渲染，对失败的结果显示相应的错误提示。这样既保证了页面的部分可用性，也明确告知用户哪部分数据加载失败。
-        ```javascript
-        onMounted(async () => {
-          const results = await Promise.allSettled([fetchApi1(), fetchApi2()]);
-          if (results[0].status === 'fulfilled') userData.value = results[0].value;
-          else userError.value = true;
-          // ...处理第二个请求
+// 祖父组件：第二层错误捕获
+const GrandParent = {
+  setup() {
+    onErrorCaptured((err, instance, info) => {
+      console.log('[GrandParent] 捕获到错误:', err.message);
+      // 如果Parent未返回false，这里会执行
+      return false; // 在这里阻止传播
+    });
+    return {};
+  },
+  components: { Parent },
+  template: '<div><h2>GrandParent</h2><Parent /></div>'
+};
+
+// 全局配置：最终防线
+app.config.errorHandler = (err, instance, info) => {
+  console.log('[Global] 全局捕获:', err.message);
+  // 如果所有组件的onErrorCaptured都未返回false，这里会执行
+};
+
+/**
+ * 传播路径可视化：
+ * 
+ * Child组件抛出错误
+ *   ↓
+ * Parent.onErrorCaptured (第一层)
+ *   ↓ (如果未返回false)
+ * GrandParent.onErrorCaptured (第二层)
+ *   ↓ (如果未返回false)
+ * app.config.errorHandler (全局层)
+ *   ↓ (如果未处理)
+ * 浏览器默认错误处理
+ */
+```
+
+---
+
+#### 题目2: 为什么需要同时监听errorHandler和unhandledrejection？
+
+**思路**: 理解Vue错误处理的局限性
+
+**答案**:
+这是因为JavaScript中有两种不同的错误传播机制：
+
+1. **同步错误和Vue组件错误**：通过try-catch或Vue的错误钩子捕获，会被errorHandler处理
+2. **Promise异常**：通过Promise的rejection机制传播，不会触发errorHandler
+
+async/await本质上是Promise的语法糖，await抛出的异常是Promise rejection，如果没有被catch捕获，会变成unhandled rejection。errorHandler无法捕获这类错误，必须监听unhandledrejection事件。
+
+**代码框架**:
+```javascript
+/**
+ * 演示errorHandler无法捕获Promise异常
+ */
+
+// 场景1：同步错误 - errorHandler可以捕获
+const Component1 = {
+  setup() {
+    onMounted(() => {
+      // 同步抛出错误
+      throw new Error('同步错误');
+      // ✅ 会被 app.config.errorHandler 捕获
+    });
+  }
+};
+
+// 场景2：async函数中的异常 - errorHandler无法捕获
+const Component2 = {
+  setup() {
+    onMounted(async () => {
+      // async函数中抛出错误
+      throw new Error('async函数中的错误');
+      // ❌ 不会被 errorHandler 捕获
+      // ✅ 会触发 unhandledrejection 事件
+    });
+  }
+};
+
+// 场景3：Promise链中的异常
+const Component3 = {
+  setup() {
+    onMounted(() => {
+      fetch('/api/data')
+        .then(res => res.json())
+        .then(data => {
+          throw new Error('Promise链中的错误');
+          // ❌ 不会被 errorHandler 捕获
+          // ✅ 会触发 unhandledrejection 事件
         });
-        ```
+      // 如果没有 .catch()，错误无法被捕获
+    });
+  }
+};
 
-8.  **场景:** 应用需要支持离线访问。当用户在离线状态下执行一个需要联网的操作（如提交评论）时，应该如何处理？
-    *   **答案:**
-        1.  首先，通过 `navigator.onLine` 判断当前网络状态。如果离线，直接阻止操作并提示用户“网络未连接”。
-        2.  如果操作时突然断网，API请求会失败。在`catch`块中检查错误类型（通常是network error），提示用户并可以将操作暂存到`IndexDB`或`localStorage`中，待网络恢复后自动或手动重试。
+/**
+ * 正确的配置：两者都要监听
+ */
+// main.js
+import { createApp } from 'vue';
+import { logErrorToServer } from './services/errorLogService';
 
-9.  **场景:** 公司的错误监控系统要求上报错误时必须附带用户ID和当前页面路由。你会在哪里实现这个功能以避免代码重复？
-    *   **答案:** 在前面创建的 `errorLogService.js` 的 `logErrorToServer` 函数中实现。这个函数是所有错误上报的唯一入口（**DRY**）。在这里，它可以从`Store`(Pinia/Vuex)或`localStorage`获取用户ID，从`vue-router`实例获取当前路由信息，然后将这些附加信息连同错误详情一起发送给服务器。
+const app = createApp(App);
 
-10. **场景:** 一个第三方脚本（如广告、分析SDK）在我们的页面上运行时抛出了一个未捕获的异常，导致我们的某个Vue组件功能失常。有什么办法可以定位到是这个第三方脚本的问题吗？
-    *   **答案:**
-        1.  **全局错误处理器**: 在`app.config.errorHandler` 或 `window.onerror` 中捕获到的错误，检查其`stack`（堆栈）信息。如果堆栈指向的源文件是第三方SDK的URL，就可以初步判断是它引起的。
-        2.  **内容安全策略(CSP)**: 配置严格的CSP规则可以限制第三方脚本的行为，虽然不能直接捕获错误，但能从源头上防止某些类型的脚本注入问题。
-        3.  **隔离**: 如果可能，将第三方脚本放在一个`iframe`中运行，利用`iframe`的沙箱机制隔离其对主页面的影响。
+// 1. Vue组件错误处理
+app.config.errorHandler = (err, instance, info) => {
+  console.error('[errorHandler] Vue组件错误:', err);
+  logErrorToServer(err, info, instance);
+};
+
+// 2. Promise未处理的rejection
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('[unhandledrejection] Promise异常:', event.reason);
+
+  // 规范化错误对象
+  const error = event.reason instanceof Error
+    ? event.reason
+    : new Error(String(event.reason));
+
+  logErrorToServer(error, 'Unhandled Promise Rejection');
+
+  // 阻止浏览器默认行为（在控制台显示警告）
+  event.preventDefault();
+});
+
+// 3. 全局JS错误（可选，作为补充）
+window.onerror = (message, source, lineno, colno, error) => {
+  console.error('[onerror] 全局JS错误');
+  if (error) {
+    logErrorToServer(error, `Global Error at ${source}:${lineno}`);
+  }
+  return true; // 阻止浏览器默认错误提示
+};
+
+/**
+ * 最佳实践：在async函数中主动捕获
+ */
+const BestPracticeComponent = {
+  setup() {
+    const fetchData = async () => {
+      try {
+        const res = await fetch('/api/data');
+        const data = await res.json();
+        return data;
+      } catch (error) {
+        // 主动捕获并处理
+        logErrorToServer(error, 'fetchData Error');
+        // 显示用户友好提示
+        showToast('数据加载失败，请稍后重试');
+        return null; // 返回降级值
+      }
+    };
+  
+    onMounted(fetchData);
+  }
+};
+
+/**
+ * 错误类型总结：
+ * 
+ * ✅ errorHandler 可以捕获：
+ * - 组件渲染错误
+ * - 生命周期钩子中的同步错误
+ * - 事件处理器中的同步错误
+ * - v-on指令绑定的方法错误
+ * 
+ * ❌ errorHandler 无法捕获：
+ * - async/await中未被catch的异常
+ * - Promise链中未被catch的rejection
+ * - setTimeout/setInterval中的错误
+ * - 事件监听器中的异步错误
+ * 
+ * ✅ unhandledrejection 可以捕获：
+ * - 所有未被catch的Promise rejection
+ * - async函数中抛出的未捕获异常
+ */
+```
 
 ---
 
-### **五、快速上手指南 (给未来的自己)**
+#### 题目3: 如何设计一个健壮的API请求错误处理机制？
 
-嗨，未来的我！如果你需要快速在另一个Vue 3项目中集成这套健壮的错误处理机制，按以下步骤操作：
+**思路**: 从拦截器、重试、降级、用户提示多个维度考虑
 
-1.  **复制文件**:
-    *   将 `src/services/errorLogService.js` 复制到新项目的对应位置。
-    *   将 `src/components/ErrorBoundary.vue` 复制到新项目的对应位置。
+**答案**:
+一个完善的API错误处理机制应包含以下层次：
 
-2.  **配置 `main.js`**:
-    *   打开新项目的 `main.js`。
-    *   导入 `logErrorToServer`。
-    *   复制并粘贴 `app.config.errorHandler` 和 `window.addEventListener('unhandledrejection', ...)` 的配置代码块。
+1. **请求拦截器**：添加token、处理请求前错误
+2. **响应拦截器**：统一处理HTTP状态码错误（401/403/500等）
+3. **自动重试**：网络波动时自动重试，避免用户手动刷新
+4. **降级策略**：使用缓存数据或默认值保证功能可用
+5. **用户提示**：根据错误类型显示友好的提示信息
+6. **错误上报**：记录详细信息到监控平台
 
-3.  **使用 `ErrorBoundary`**:
-    *   在任何你认为可能出错，或者出错后不应影响整个应用的组件外层，像这样包裹它：
-        ```vue
-        <template>
-          <ErrorBoundary>
-            <!-- 你那个可能不太稳定的业务组件 -->
-            <MyBusinessComponent />
-          </ErrorBoundary>
-        </template>
-      
-        <script setup>
-        import ErrorBoundary from '@/components/ErrorBoundary.vue';
-        import MyBusinessComponent from '@/components/MyBusinessComponent.vue';
-        </script>
-        ```
+**代码框架**:
+```javascript
+/**
+ * 完整的API错误处理方案
+ * 文件：src/utils/request.js
+ */
+import axios from 'axios';
+import { logErrorToServer } from '@/services/errorLogService';
 
-4.  **配置 Axios (如果项目使用)**:
-    *   找到`axios`实例的配置文件。
-    *   添加响应拦截器 (`interceptors.response.use`) 来统一处理API级别的错误（如401跳转登录，500通用提示等）。
+/**
+ * 创建axios实例
+ */
+const request = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL,
+  timeout: 10000
+});
 
-**核心理念回顾**:
-*   **全局捕获 (`main.js`)**：作为最后防线，捕获一切未知错误。
-*   **局部隔离 (`ErrorBoundary.vue`)**：包裹关键或不稳定组件，实现优雅降级，提升用户体验。
-*   **统一上报 (`errorLogService.js`)**：所有错误都通过这个服务上报，方便未来统一更换监控系统。
+/**
+ * 1. 请求拦截器
+ */
+request.interceptors.request.use(
+  config => {
+    // 添加token
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+  
+    // 添加请求ID用于追踪
+    config.headers['X-Request-ID'] = generateRequestId();
+  
+    return config;
+  },
+  error => {
+    // 请求配置错误
+    logErrorToServer(error, 'Request Config Error');
+    return Promise.reject(error);
+  }
+);
 
-就这样，几分钟内你的新项目就拥有了企业级的错误处理能力。
+/**
+ * 2. 响应拦截器（核心错误处理）
+ */
+request.interceptors.response.use(
+  response => {
+    // 成功响应，直接返回数据
+    return response.data;
+  },
+  async error => {
+    const { config, response } = error;
+  
+    // 2.1 网络错误（无response）
+    if (!response) {
+      const errorMsg = '网络连接失败，请检查网络设置';
+      showToast(errorMsg, 'error');
+      logErrorToServer(error, 'Network Error');
+      return Promise.reject(new Error(errorMsg));
+    }
+  
+    // 2.2 HTTP状态码错误处理
+    const { status, data } = response;
+  
+    // 错误信息映射
+    const errorHandlers = {
+      400: () => {
+        showToast(data.message || '请求参数错误');
+        return Promise.reject(error);
+      },
+    
+      401: async () => {
+        // 未授权，清除token并跳转登录
+        localStorage.removeItem('token');
+        router.push('/login');
+        showToast('登录已过期，请重新登录');
+        return Promise.reject(new Error('Unauthorized'));
+      },
+    
+      403: () => {
+        showToast('无权限访问该资源');
+        return Promise.reject(error);
+      },
+    
+      404: () => {
+        showToast('请求的资源不存在');
+        logErrorToServer(error, `404 Not Found: ${config.url}`);
+        return Promise.reject(error);
+      },
+    
+      500: () => {
+        showToast('服务器内部错误，请稍后重试');
+        logErrorToServer(error, `500 Server Error: ${config.url}`);
+        return Promise.reject(error);
+      },
+    
+      502: () => {
+        showToast('网关错误');
+        return Promise.reject(error);
+      },
+    
+      503: () => {
+        showToast('服务暂时不可用');
+        return Promise.reject(error);
+      }
+    };
+  
+    // 执行对应的错误处理
+    const handler = errorHandlers[status];
+    if (handler) {
+      return handler();
+    }
+  
+    // 2.3 其他未知错误
+    const errorMsg = data.message || '请求失败，请稍后重试';
+    showToast(errorMsg, 'error');
+    logErrorToServer(error, `HTTP ${status}: ${config.url}`);
+  
+    return Promise.reject(error);
+  }
+);
 
-[标签: Vue 错误处理, 异常捕获]
+/**
+ * 3. 自动重试机制
+ */
+const MAX_RETRY = 3;
+const RETRY_DELAY = 1000; // 1秒
+
+request.interceptors.response.use(
+  response => response,
+  async error => {
+    const { config } = error;
+  
+    // 初始化重试计数
+    config.__retryCount = config.__retryCount || 0;
+  
+    // 判断是否应该重试
+    const shouldRetry = (
+      config.__retryCount < MAX_RETRY &&
+      !error.response && // 只对网络错误重试
+      !config.__isRetry // 避免死循环
+    );
+  
+    if (shouldRetry) {
+      config.__retryCount++;
+      config.__isRetry = true;
+    
+      console.log(`[Retry] 第${config.__retryCount}次重试:`, config.url);
+    
+      // 延迟后重试
+      await new Promise(resolve => 
+        setTimeout(resolve, RETRY_DELAY * config.__retryCount)
+      );
+    
+      return request(config);
+    }
+  
+    return Promise.reject(error);
+  }
+);
+
+/**
+ * 4. 封装带降级的请求方法
+ */
+export async function requestWithFallback(
+  requestFn,
+  fallbackData = null,
+  cacheKey = null
+) {
+  try {
+    const data = await requestFn();
+  
+    // 成功后缓存数据（可选）
+    if (cacheKey) {
+      localStorage.setItem(cacheKey, JSON.stringify(data));
+    }
+  
+    return { data, error: null };
+  } catch (error) {
+    // 失败时尝试使用缓存
+    if (cacheKey) {
+      const cachedData = localStorage.getItem(cacheKey);
+      if (cachedData) {
+        console.warn('[Fallback] 使用缓存数据');
+        showToast('网络异常，使用离线数据', 'warning');
+        return { 
+          data: JSON.parse(cachedData), 
+          error, 
+          fromCache: true 
+        };
+      }
+    }
+  
+    // 使用默认降级数据
+    console.error('[Fallback] 使用默认数据');
+    return { data: fallbackData, error };
+  }
+}
+
+/**
+ * 5. 使用示例
+ */
+// 场景1：基础请求
+export const getUserInfo = (userId) => {
+  return request.get(`/users/${userId}`);
+};
+
+// 场景2：带降级的请求
+import { requestWithFallback } from '@/utils/request';
+
+const { data, error, fromCache } = await requestWithFallback(
+  () => request.get('/user/profile'),
+  { name: '访客', avatar: '/default-avatar.png' }, // 降级数据
+  'user_profile_cache' // 缓存key
+);
+
+if (fromCache) {
+  console.log('使用的是缓存数据');
+}

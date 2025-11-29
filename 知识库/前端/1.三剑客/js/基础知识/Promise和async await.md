@@ -1,349 +1,686 @@
-好的，我们来详细解析这段关于 `Promise` 和异步图片加载的代码。
+# Promise 和 async/await 精华学习资料
 
-### 代码总结
+## 日常学习模式
 
-这段代码定义了一个名为 `loadImg` 的函数，它的核心作用是将一个传统的、基于事件回调（`onload`, `onerror`）的异步操作——图片加载——封装成一个现代的、基于 `Promise` 的异步任务。
+[标签: JavaScript Promise, async/await, 异步编程, ES6+]
 
-1.  **封装**：函数接收一个图片 `src` 地址，并立即返回一个 `Promise` 对象。
-2.  **异步逻辑**：在 `Promise` 的执行器函数内部，它创建了一个 `<img>` 元素。
-3.  **状态转换**：
-    *   当图片成功加载时，`img.onload` 事件被触发，函数调用 `resolve(img)`，将 `Promise` 的状态变为 `fulfilled`（成功），并将加载好的 `img` DOM 元素作为结果向后传递。
-    *   当图片加载失败时，`img.onerror` 事件被触发，函数调用 `reject(err)`，将 `Promise` 的状态变为 `rejected`（失败），并将一个包含错误信息的 `Error` 对象向后传递。
-4.  **Promise 链**：示例代码展示了如何使用 `.then()` 和 `.catch()` 来消费这个 `Promise`。特别地，它演示了 `Promise` 链的一个关键特性：`.then()` 回调函数中，如果返回一个普通值，它会立即被传递给下一个 `.then()`; 如果返回一个新的 `Promise`，整个链条会等待这个新的 `Promise` 完成后，才继续执行下一个 `.then()`。
+### 核心概念
 
-总而言之，这是一个将回调模式转换为 `Promise` 模式的经典范例，极大地改善了异步代码的可读性和可维护性，避免了“回调地狱”。
+**Promise 是什么**
+Promise 是 JavaScript 中处理异步操作的对象，代表一个未来才会完成的操作结果。它有三种状态：
+- `pending`（进行中）：初始状态
+- `fulfilled`（已成功）：操作成功完成
+- `rejected`（已失败）：操作失败
 
----
+状态转换规则：只能从 pending 变为 fulfilled 或 rejected，且状态一旦改变就永久保持。
 
-### 开发文档
+**async/await 是什么**
+ES2017 引入的语法糖，让异步代码看起来像同步代码：
+- `async` 函数自动返回 Promise
+- `await` 暂停函数执行，等待 Promise 完成
+- 错误处理使用标准的 `try...catch`
 
-#### 1. 简介
+### 基础语法
 
-**`loadImg` - 基于 Promise 的图片预加载器**
-
-`loadImg` 是一个轻量级、零依赖的 JavaScript 工具函数，用于异步加载图片。它将浏览器原生的图片加载事件封装在 `Promise` API 中，使得开发者可以用更优雅、更强大的链式调用和 `async/await` 语法来处理图片加载成功或失败的场景，有效管理复杂的异步依赖关系。
-
-#### 2. 学习知识
-
-*   **Promise 基础**：`new Promise((resolve, reject) => { ... })` 是创建 `Promise` 实例的標準方式。执行器函数会立即执行，它包含异步操作的逻辑。`resolve` 是一个函数，用于在异步操作成功时调用，将 `Promise` 状态置为 `fulfilled`；`reject` 则是操作失败时调用，将状态置为 `rejected`。
-*   **Promise 状态机**：一个 `Promise` 只能从 `pending`（进行中）变为 `fulfilled`（已成功）或 `rejected`（已失败），且状态一旦改变，就不能再更改。
-*   **`.then(onFulfilled, onRejected)`**：用于注册 `Promise` 状态变为 `fulfilled` 或 `rejected` 之后的回调函数。`loadImg('...').then(img => { ... })` 就是注册了成功状态的回调。
-*   **`.catch(onRejected)`**：是 `.then(null, onRejected)` 的语法糖，专门用于捕获链条中任何一个环节发生的 `rejected` 状态。它能捕获其前面所有 `.then()` 中发生的错误或 `reject` 调用。
-*   **Promise 链式调用**：`.then()` 方法本身也会返回一个新的 `Promise`，这使得我们可以无限链接下去。
-    *   **传递值**：当 `.then` 的回调函数返回一个非 `Promise` 值时（如 `return img1`），这个值会作为成功的结果，被包装成一个新的 `fulfilled` 状态的 `Promise`，并传递给下一个 `.then()`。
-    *   **传递 Promise**：当 `.then` 的回调函数返回一个 `Promise` 实例时（如 `return loadImg(url2)`），整个链条会“暂停”，等待这个新的 `Promise` 状态落定。如果新 `Promise` 成功，其结果会传递给下一个 `.then()`；如果失败，则会跳过后续的 `.then()`，直接进入 `.catch()`。这是实现**串行异步任务**的核心。
-*   **`Promise.all(iterable)`**：接收一个 `Promise` 数组，返回一个新的 `Promise`。当数组中所有 `Promise` 都成功时，它才会成功，并且结果是一个包含所有 `Promise` 结果的数组（按顺序）。如果其中任何一个 `Promise` 失败，它会立即失败，并返回第一个失败 `Promise` 的原因。适用于**并行加载**多个互不依赖的资源。
-*   **`async/await`**：ES2017 引入的语法糖，让异步代码看起来像同步代码。`async` 函数隐式返回一个 `Promise`。`await` 关键字只能在 `async` 函数中使用，它会暂停函数的执行，等待它后面的 `Promise` 完成，然后返回 `Promise` 的结果。错误处理则使用标准的 `try...catch` 语句。
-
-#### 3. 用途 (用在那个地方)
-
-*   **图片预加载**：在显示图片轮播、相册或游戏资源前，提前加载图片到浏览器缓存，以提升用户体验，避免图片在显示时才开始加载造成的闪烁或空白。
-*   **依赖加载**：确保一张关键图片（如背景图）加载完成后，再执行后续的 DOM 操作或动画，保证视觉效果的正确性。
-*   **获取图片尺寸**：在图片被插入 DOM 之前，安全地获取其原始 `width` 和 `height`，用于布局计算。
-*   **Canvas 绘图**：在将图片绘制到 `<canvas>` 上之前，必须确保图片已经完全加载。`loadImg` 可以完美解决这个问题。
-*   **批量加载管理**：结合 `Promise.all`，可以轻松实现多个图片全部加载完成后再显示页面的功能，并统一处理加载进度或失败情况。
-
-#### 4. 完整代码示例
-
-我们在现有代码基础上，补充了 `Promise.all` 和 `async/await` 的使用场景。
-
-**HTML (`index.html`)**
-
-```html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Promise Image Loader Demo</title>
-    <style>
-        body { font-family: sans-serif; }
-        #container { border: 2px solid #ccc; padding: 10px; min-height: 200px; }
-        img { max-width: 150px; margin: 5px; border: 1px solid #ddd; }
-        .status { margin-top: 10px; font-weight: bold; }
-    </style>
-</head>
-<body>
-    <h1>Promise Image Loader Demo</h1>
-    <div id="container"></div>
-    <div id="status" class="status"></div>
-
-    <button onclick="runSequentialDemo()">加载串行图片</button>
-    <button onclick="runParallelDemo()">加载并行图片 (Promise.all)</button>
-    <button onclick="runAsyncAwaitDemo()">加载串行图片 (async/await)</button>
-    <button onclick="runFailDemo()">测试加载失败</button>
-  
-    <script src="loader.js"></script>
-</body>
-</html>
-```
-
-**JavaScript (`loader.js`)**
-
+**创建 Promise**
 ```javascript
-/* --- 核心函数 --- */
-function loadImg(src) {
-    const p = new Promise(
-        (resolve, reject) => {
-            const img = document.createElement('img');
-            // 关键：必须先设置事件监听，再设置 src
-            img.onload = () => {
-                resolve(img);
-            };
-            img.onerror = () => {
-                const err = new Error(`图片加载失败: ${src}`);
-                reject(err);
-            };
-            img.src = src;
-        }
-    );
-    return p;
-}
-
-// 准备一些图片 URL
-const url1 = 'https://img.mukewang.com/5a9fc8070001a82402060220-140-140.jpg';
-const url2 = 'https://img3.mukewang.com/5a9fc8070001a82402060220-100-100.jpg';
-const url3 = 'https://img.imooc.com/static/img/index/logo.png';
-const invalidUrl = 'https://example.com/non-existent-image.jpg'; // 一个无效的URL
-
-const container = document.getElementById('container');
-const statusDiv = document.getElementById('status');
-
-function clearContainer() {
-    container.innerHTML = '';
-    statusDiv.textContent = '准备加载...';
-}
-
-/* --- 1. 串行加载示例 (Sequential .then chain) --- */
-function runSequentialDemo() {
-    clearContainer();
-    statusDiv.textContent = '开始串行加载...';
-  
-    loadImg(url1).then(img1 => {
-        statusDiv.textContent = '第一张图加载成功，正在加载第二张...';
-        console.log('Image 1 width:', img1.width);
-        container.appendChild(img1);
-        return loadImg(url2); // 返回新的 Promise
-    }).then(img2 => {
-        statusDiv.textContent = '第二张图加载成功！';
-        console.log('Image 2 width:', img2.width);
-        container.appendChild(img2);
-    }).catch(ex => {
-        statusDiv.textContent = `加载失败: ${ex.message}`;
-        console.error(ex);
-    });
-}
-
-/* --- 2. 并行加载示例 (Promise.all) --- */
-function runParallelDemo() {
-    clearContainer();
-    statusDiv.textContent = '开始并行加载...';
-  
-    const urls = [url1, url2, url3];
-    const promises = urls.map(url => loadImg(url));
-
-    Promise.all(promises).then(images => {
-        statusDiv.textContent = '所有图片并行加载成功！';
-        console.log('All images loaded:', images);
-        images.forEach(img => container.appendChild(img));
-    }).catch(ex => {
-        statusDiv.textContent = `并行加载失败: ${ex.message}`;
-        console.error(ex);
-    });
-}
-
-/* --- 3. Async/Await 示例 --- */
-async function runAsyncAwaitDemo() {
-    clearContainer();
-    statusDiv.textContent = '开始使用 async/await 加载...';
-
-    try {
-        const img1 = await loadImg(url1);
-        statusDiv.textContent = '第一张图加载成功 (await)...';
-        console.log('Image 1 width:', img1.width);
-        container.appendChild(img1);
-
-        const img2 = await loadImg(url2);
-        statusDiv.textContent = '第二张图加载成功 (await)!';
-        console.log('Image 2 width:', img2.width);
-        container.appendChild(img2);
-    } catch (ex) {
-        statusDiv.textContent = `加载失败 (await): ${ex.message}`;
-        console.error(ex);
-    }
-}
-
-/* --- 4. 失败处理示例 --- */
-function runFailDemo() {
-    clearContainer();
-    statusDiv.textContent = '正在尝试加载一个无效的图片...';
-  
-    loadImg(invalidUrl).then(img => {
-        // 这部分代码不会执行
-        container.appendChild(img);
-    }).catch(ex => {
-        statusDiv.textContent = `捕获到错误: ${ex.message}`;
-        console.error('成功捕获了预期的错误:', ex);
-    });
-}
-```
-
-[标签: JavaScript, Promise, 异步, ES6]
-
----
-
-### 面试官考察
-
-如果你是面试官，基于这个文件，你可以提出以下问题。
-
-#### 针对核心代码的10个问题
-
-1.  **问：** `loadImg` 函数为什么不直接返回 `img` 元素，而是返回一个 `Promise`？
-    **答：** 因为图片加载是一个**异步**操作。在调用 `loadImg` 并设置 `img.src` 后，代码会立即继续执行，此时图片还没有加载完成。返回 `Promise` 是为了提供一个占位符，代表这个未来才会完成的操作。调用者可以通过 `.then()` 来注册当操作完成时需要执行的代码，从而正确地处理异步流程。
-
-2.  **问：** 在 `loadImg` 函数中，如果我把 `img.src = src` 这一行移到 `img.onload` 和 `img.onerror` 定义之前，可能会发生什么问题？
-    **答：** 可能会发生 **race condition（竞态条件）**。如果图片非常小或已经被浏览器缓存，加载可能会瞬间完成。如果 `img.src` 在事件监听器被设置**之前**赋值，`load` 事件可能在监听器绑定前就已经触发了，导致 `onload` 回调永远不会被执行，`Promise` 也将永远停留在 `pending` 状态，不会 `resolve`。因此，正确的顺序是先设置好所有事件监听器，再通过设置 `src` 来触发加载。
-
-3.  **问：** 请解释一下在第二个 `.then` 链示例中，`return img1` 和 `return loadImg(url2)` 对 `Promise` 链的行为有什么本质不同？
-    **答：**
-    *   `return img1`：返回的是一个**普通对象**。`Promise` 链会立即将这个对象包装成一个 `fulfilled` 状态的 `Promise`，并将其作为结果传递给下一个 `.then()`。
-    *   `return loadImg(url2)`：返回的是一个**新的 `Promise` 实例**。`Promise` 链会识别到这一点，并会**等待**这个新的 `Promise` 解决（`resolve` 或 `reject`）。只有当 `loadImg(url2)` 返回的 `Promise` 完成后，链条才会继续，并将新 `Promise` 的结果传递给下一个 `.then()`。这就是实现异步任务串行执行的关键。
-
-4.  **问：** 如果一个 `Promise` 链中没有 `.catch()`，而其中一个 `Promise` 被 `reject` 了，会发生什么？
-    **答：** 会产生一个 "Uncaught (in promise)" 错误，这个未捕获的 `Promise` rejection 会在浏览器控制台中报告。这是一种应该避免的情况，因为它意味着程序中存在未处理的潜在错误。最佳实践是总是在 `Promise` 链的末尾加上一个 `.catch()` 来统一处理所有可能的错误。
-
-5.  **问：** `Promise` 解决了传统回调函数的什么主要问题？
-    **答：** 主要解决了两个问题：
-    1.  **回调地狱（Callback Hell）**：多层嵌套的回调函数导致代码横向发展，难以阅读和维护。`Promise` 的链式调用 `.then()` 将其变成了纵向的、线性的代码流。
-    2.  **信任问题和控制反转**：在回调模式中，我们将后续操作的控制权（即回调函数）交给了第三方异步函数。而 `Promise` 将控制权保留在了我们自己手中，我们可以自己决定何时通过 `.then()` 附加后续操作，并且 `Promise` 的状态一旦改变就不可逆，保证了回调只会被调用一次。
-
-6.  **问：** 一个 `Promise` 的状态有几种？它们之间是如何转换的？
-    **答：** 有三种状态：`pending`（进行中）、`fulfilled`（已成功）和 `rejected`（已失败）。状态只能从 `pending` 转换到 `fulfilled` 或 `rejected`，并且这个过程是单向的、不可逆的。一旦 `Promise` 的状态改变，它就会永远保持那个状态。
-
-7.  **问：** 你能解释一下 `Promise` 和事件循环（Event Loop）中的微任务（Microtask）有什么关系吗？
-    **答：** `.then()`, `.catch()`, `.finally()` 中注册的回调函数会被放入**微任务队列（Microtask Queue）**。在一个事件循环的 tick 中，当主线程的同步代码执行完毕后，引擎会立即清空微任务队列中的所有任务，然后才会去处理宏任务队列（Macrotask Queue，如 `setTimeout`, `setInterval`, I/O 操作）中的下一个任务。这意味着 `Promise` 的回调比 `setTimeout` 的回调有更高的执行优先级。
-
-8.  **问：** `Promise.resolve(value)` 和 `new Promise(resolve => resolve(value))` 有什么区别？
-    **答：** 在大多数情况下，它们的效果是等价的，都创建一个已 `resolve` 的 `Promise`。但有一个细微区别：如果 `value` 本身就是一个 `Promise`，`Promise.resolve(value)` 会直接返回这个 `value`（即同一个 `Promise` 实例），而 `new Promise(...)` 总是会创建一个全新的 `Promise` 实例来包装它。`Promise.resolve()` 是一个更简洁、更常用的方式来创建已解决的 `Promise`。
-
-9.  **问：** 如果我需要加载10张图片，但只要有任意一张加载失败，我就需要立即执行一个失败处理逻辑，我应该用什么 `Promise` 的静态方法？
-    **答：** 应该使用 `Promise.all()`。它接收一个 `Promise` 数组，如果其中任何一个 `Promise` 变为 `rejected`，`Promise.all` 返回的新 `Promise` 也会立即变为 `rejected`，并携带第一个失败 `Promise` 的错误原因，这完全符合需求。
-
-10. **问：** `reject(new Error('...'))` 和 `reject('...')` 之间有什么好坏之分？
-    **答：** 强烈推荐使用 `reject(new Error('...'))`。虽然 `reject` 可以接受任何值，但传递一个 `Error` 对象是最佳实践。因为 `Error` 对象包含了`stack trace`（堆栈跟踪信息），这在调试时非常宝贵，可以帮助快速定位错误发生的位置。如果只传递一个字符串，调试信息会少很多。
-
-#### 针对补充例子的5个问题
-
-1.  **问：** 在 `runParallelDemo` 中，我们使用了 `urls.map(url => loadImg(url))`。请问 `map` 函数执行完毕后，图片开始加载了吗？为什么？
-    **答：** 是的，已经开始加载了。`loadImg(url)` 函数的定义是，一旦被调用，它内部的 `Promise` 执行器就会立即执行，即创建 `<img>` 元素并设置 `src` 属性。`map` 方法会遍历 `urls` 数组并**立即调用** `loadImg` 函数，所以所有图片的加载请求几乎是同时发出的。`map` 的返回值是一个由这些正在 `pending` 的 `Promise` 组成的数组。
-
-2.  **问：** 请对比 `runSequentialDemo` 的 `.then` 链和 `runAsyncAwaitDemo` 的 `try...catch` 块。你认为 `async/await` 在代码可读性和错误处理方面带来了哪些优势？
-    **答：**
-    *   **可读性**：`async/await` 让异步代码的结构看起来和同步代码几乎一样，是线性的、从上到下的执行流程，非常直观。相比之下，`.then` 链虽然也是线性的，但需要理解回调函数和闭包的概念。
-    *   **错误处理**：`async/await` 可以使用标准的 `try...catch` 结构来捕获异步操作的错误，这与同步代码的错误处理方式完全一致，非常自然。而 `.then` 链需要一个专门的 `.catch()` 方法，并且对于复杂的逻辑，错误处理的范围可能不如 `try...catch` 那样清晰。
-
-3.  **问：** 如果我需要加载10张图片，并且无论成功还是失败，我都想知道每一张图片的结果，我应该使用什么 `Promise` 的静态方法？
-    **答：** 应该使用 `Promise.allSettled()`。它接收一个 `Promise` 数组，并返回一个新的 `Promise`。这个新 `Promise` 永远不会 `reject`，它总是在所有输入的 `Promise` 都 settle（即 `fulfilled` 或 `rejected`）后才 `fulfilled`。它的结果是一个对象数组，每个对象描述了对应 `Promise` 的最终状态（`status: 'fulfilled'` 或 `status: 'rejected'`）和结果/原因。
-
-4.  **问：** 假设我想同时请求两张图片，但只关心哪一张**最先**加载完成，并用它做一些事，我该怎么实现？
-    **答：** 应该使用 `Promise.race()`。它接收一个 `Promise` 数组，返回一个新的 `Promise`。这个新 `Promise` 的状态会与输入数组中第一个 settle（`fulfilled` 或 `rejected`）的 `Promise` 的状态保持一致。所以 `Promise.race([loadImg(urlA), loadImg(urlB)])` 会在 `urlA` 和 `urlB` 中最快加载完成的那一个 `resolve` 时也跟着 `resolve`。
-
-5.  **问：** 在 `runAsyncAwaitDemo` 函数中，如果我把 `await loadImg(url1)` 和 `await loadImg(url2)` 分别赋值，这两张图片是并行加载还是串行加载的？如果我希望它们并行加载但仍然使用 `async/await`，该如何修改代码？
-    **答：** 是**串行加载**的。因为 `await` 会暂停函数的执行，直到 `loadImg(url1)` 完成后，才会继续执行并开始调用 `loadImg(url2)`。
-    要实现并行加载，可以先同时触发两个加载任务，然后用 `Promise.all` 来统一等待它们的结果。修改如下：
-    ```javascript
-    async function runParallelAsyncAwaitDemo() {
-        try {
-            // 1. 同时发起两个加载请求，获得两个 Promise
-            const promise1 = loadImg(url1);
-            const promise2 = loadImg(url2);
-
-            // 2. 使用 Promise.all 并行等待它们全部完成
-            const [img1, img2] = await Promise.all([promise1, promise2]);
-          
-            // 3. 都加载完后再操作
-            container.appendChild(img1);
-            container.appendChild(img2);
-            statusDiv.textContent = '两张图已通过 await + Promise.all 并行加载完成！';
-        } catch(ex) {
-            // ... 错误处理
-        }
-    }
-    ```
-
----
-
-### 快速使用指南
-
-当你忘记如何使用时，参考这里快速上手：
-
-**目标：** 在你的项目里用 `loadImg` 函数加载一张或多张图片。
-
-**步骤 1：复制核心函数**
-把 `loadImg` 函数的代码复制到你的 JavaScript 文件中。
-
-```javascript
+/**
+ * 创建一个 Promise 实例
+ * @param {string} src - 资源地址
+ * @returns {Promise<HTMLImageElement>} 返回加载的图片元素
+ */
 function loadImg(src) {
     return new Promise((resolve, reject) => {
         const img = document.createElement('img');
+      
+        // 成功回调
         img.onload = () => resolve(img);
-        img.onerror = () => reject(new Error(`图片加载失败 ${src}`));
+      
+        // 失败回调
+        img.onerror = () => reject(new Error(`加载失败: ${src}`));
+      
+        // 触发加载（必须在设置监听器之后）
         img.src = src;
     });
 }
 ```
 
-**步骤 2：选择你的使用方式**
-
-**A) 加载单张图片 (最常用)**
+**消费 Promise**
 ```javascript
-const imageUrl = 'path/to/your/image.jpg';
-
-loadImg(imageUrl)
-    .then(loadedImage => {
-        // 成功了！loadedImage 是一个 <img> DOM 元素
-        console.log(`图片加载成功，尺寸: ${loadedImage.width}x${loadedImage.height}`);
-        document.body.appendChild(loadedImage); //把它显示在页面上
+// 方式1: .then/.catch 链式调用
+loadImg('image.jpg')
+    .then(img => {
+        console.log('成功', img.width);
+        return img; // 传递给下一个 .then
     })
-    .catch(error => {
-        // 失败了！
-        console.error('加载出错了:', error);
+    .catch(err => {
+        console.error('失败', err);
+    });
+
+// 方式2: async/await 
+async function load() {
+    try {
+        const img = await loadImg('image.jpg');
+        console.log('成功', img.width);
+    } catch (err) {
+        console.error('失败', err);
+    }
+}
+```
+
+### 核心方法
+
+**Promise 链式调用**
+```javascript
+/**
+ * 串行加载多张图片
+ * 每张图片依次加载，前一张完成后才加载下一张
+ */
+loadImg('img1.jpg')
+    .then(img1 => {
+        document.body.appendChild(img1);
+        // 返回 Promise 会让链条等待
+        return loadImg('img2.jpg');
+    })
+    .then(img2 => {
+        document.body.appendChild(img2);
+        // 返回普通值会立即传递给下一个 .then
+        return 'done';
+    })
+    .then(result => {
+        console.log(result); // 'done'
+    })
+    .catch(err => {
+        // 捕获链条中任何环节的错误
+        console.error(err);
     });
 ```
 
-**B) 并行加载多张图片，全部成功后再执行操作**
+**Promise.all() - 并行等待全部完成**
 ```javascript
-const urls = ['image1.png', 'image2.png', 'image3.png'];
+/**
+ * 并行加载多张图片，全部成功才算成功
+ * 任意一张失败则立即失败
+ */
+const urls = ['img1.jpg', 'img2.jpg', 'img3.jpg'];
+const promises = urls.map(url => loadImg(url));
 
-// 1. 把 url 数组变成 Promise 数组
-const promises = urls.map(loadImg);
-
-// 2. 用 Promise.all 等待全部完成
 Promise.all(promises)
     .then(images => {
-        // 成功了！images 是一个 [img1, img2, img3] 数组
+        // images 是按顺序的结果数组 [img1, img2, img3]
         images.forEach(img => document.body.appendChild(img));
     })
-    .catch(error => {
-        // 只要有一个失败了，就会进到这里
-        console.error('批量加载时有图片失败了:', error);
+    .catch(err => {
+        // 第一个失败的错误
+        console.error('有图片加载失败', err);
     });
 ```
 
-**C) 使用现代的 `async/await` 语法 (推荐在 async 函数中使用)**
+**Promise.race() - 竞速，取最快的结果**
 ```javascript
-async function displayImages() {
+/**
+ * 哪张图片先加载完就用哪张
+ */
+Promise.race([
+    loadImg('fast.jpg'),
+    loadImg('slow.jpg')
+])
+.then(fastestImg => {
+    console.log('最快加载的图片', fastestImg);
+});
+```
+
+**Promise.allSettled() - 等待全部完成，不管成功失败**
+```javascript
+/**
+ * 获取所有图片的最终状态
+ * 适合需要知道每张图片结果的场景
+ */
+Promise.allSettled(promises)
+    .then(results => {
+        results.forEach((result, index) => {
+            if (result.status === 'fulfilled') {
+                console.log(`图片${index}成功`, result.value);
+            } else {
+                console.log(`图片${index}失败`, result.reason);
+            }
+        });
+    });
+```
+
+### 使用场景
+
+**场景1: 资源预加载**
+```javascript
+/**
+ * 游戏启动前预加载所有资源
+ */
+async function preloadGameAssets() {
+    const assets = [
+        'background.jpg',
+        'character.png',
+        'enemy.png'
+    ];
+  
     try {
-        const img1 = await loadImg('image1.png');
-        document.body.appendChild(img1);
+        const images = await Promise.all(assets.map(loadImg));
+        console.log('所有资源加载完成，游戏可以开始');
+        return images;
+    } catch (err) {
+        console.error('资源加载失败，无法启动游戏', err);
+        throw err;
+    }
+}
+```
+
+**场景2: 依赖加载（串行）**
+```javascript
+/**
+ * 背景图加载完后才加载内容图
+ */
+async function loadWithDependency() {
+    try {
+        // 第一步：加载背景
+        const bg = await loadImg('background.jpg');
+        document.body.style.backgroundImage = `url(${bg.src})`;
       
-        const img2 = await loadImg('image2.png');
-        document.body.appendChild(img2);
-    } catch (error) {
-        console.error('在 async 函数中加载图片失败:', error);
+        // 第二步：背景加载完后才加载内容
+        const content = await loadImg('content.jpg');
+        document.querySelector('.container').appendChild(content);
+    } catch (err) {
+        console.error('加载出错', err);
+    }
+}
+```
+
+**场景3: 超时控制**
+```javascript
+/**
+ * 如果图片5秒内没加载完就超时
+ */
+function loadWithTimeout(url, timeout = 5000) {
+    const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('加载超时')), timeout);
+    });
+  
+    return Promise.race([
+        loadImg(url),
+        timeoutPromise
+    ]);
+}
+
+// 使用
+loadWithTimeout('large-image.jpg')
+    .then(img => console.log('加载成功'))
+    .catch(err => console.error(err.message)); // '加载超时' 或加载错误
+```
+
+**场景4: 并行但用 async/await**
+```javascript
+/**
+ * 同时发起多个请求，但用 await 语法等待
+ * 比串行快，比 Promise.all 更灵活
+ */
+async function parallelWithAwait() {
+    // 同时发起请求（不要立即 await）
+    const promise1 = loadImg('img1.jpg');
+    const promise2 = loadImg('img2.jpg');
+  
+    // 一起等待它们完成
+    const [img1, img2] = await Promise.all([promise1, promise2]);
+  
+    document.body.appendChild(img1);
+    document.body.appendChild(img2);
+}
+```
+
+### 关键注意事项
+
+1. **事件监听顺序**：必须先设置 `onload`/`onerror`，再设置 `src`，避免竞态条件
+
+2. **错误处理必须有**：未捕获的 Promise rejection 会在控制台报错，务必加 `.catch()` 或 `try/catch`
+
+3. **Promise 状态不可逆**：一旦从 pending 变为 fulfilled/rejected，就永久定型
+
+4. **微任务优先级**：`.then` 回调在微任务队列，优先于 `setTimeout` 等宏任务
+
+5. **返回值的区别**：
+   - `.then()` 中返回普通值 → 立即传递给下一个 `.then`
+   - `.then()` 中返回 Promise → 链条等待这个 Promise 完成
+
+---
+
+## 面试突击模式
+
+### Promise 和 async/await 面试速记
+
+#### 30秒电梯演讲
+Promise 是 JS 处理异步操作的对象，有三种状态（pending/fulfilled/rejected），通过 `.then/.catch` 链式调用避免回调地狱。async/await 是 ES2017 的语法糖，让异步代码像同步代码一样易读，本质还是 Promise，错误用 try/catch 捕获。
+
+#### 高频考点（必背）
+
+**考点1: Promise 的三种状态及转换规则**
+Promise 有 pending（进行中）、fulfilled（成功）、rejected（失败）三种状态。状态只能从 pending 单向转换为 fulfilled 或 rejected，且一旦改变就不可逆，这保证了回调只执行一次。
+
+**考点2: Promise 解决了什么问题**
+解决回调地狱（多层嵌套导致横向代码）和控制反转问题（将异步控制权从第三方代码拿回自己手中），通过链式调用让代码纵向发展，更易维护。
+
+**考点3: .then 返回值的两种情况**
+返回普通值时，会被包装成 fulfilled 的 Promise 立即传递给下一个 .then；返回 Promise 时，链条会等待这个 Promise 完成，实现串行异步操作。
+
+**考点4: Promise.all vs Promise.race**
+`Promise.all` 等待所有 Promise 成功，任一失败则整体失败，返回结果数组；`Promise.race` 返回最先完成的 Promise 结果，不管成功失败。
+
+**考点5: async/await 的本质**
+async 函数返回 Promise，await 暂停函数执行等待 Promise 完成。本质是 Promise 的语法糖，错误处理用 try/catch，比 .then 链更符合同步思维习惯。
+
+**考点6: 微任务和宏任务**
+Promise 的 .then 回调进入微任务队列，在当前宏任务的所有同步代码执行完后立即执行，优先级高于 setTimeout 等宏任务。执行顺序：同步代码 → 微任务队列 → 宏任务队列。
+
+#### 经典面试题
+
+**题目1: 实现一个带超时的图片加载函数**
+```javascript
+/**
+ * 实现图片加载，超过指定时间则超时失败
+ * @param {string} url - 图片地址
+ * @param {number} timeout - 超时时间（毫秒）
+ * @returns {Promise<HTMLImageElement>}
+ */
+function loadImgWithTimeout(url, timeout = 5000) {
+    // 创建加载 Promise
+    const loadPromise = new Promise((resolve, reject) => {
+        const img = document.createElement('img');
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error('图片加载失败'));
+        img.src = url;
+    });
+  
+    // 创建超时 Promise
+    const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('加载超时')), timeout);
+    });
+  
+    // 竞速：哪个先完成用哪个
+    return Promise.race([loadPromise, timeoutPromise]);
+}
+
+// 使用示例
+loadImgWithTimeout('large.jpg', 3000)
+    .then(img => console.log('成功', img))
+    .catch(err => console.error(err.message));
+```
+
+**思路**: 用 `Promise.race` 让加载和超时计时器竞争，谁先完成就采用谁的结果。
+
+---
+
+**题目2: 实现 Promise.all（手写）**
+```javascript
+/**
+ * 手写 Promise.all
+ * @param {Array<Promise>} promises - Promise 数组
+ * @returns {Promise<Array>} 所有结果的数组
+ */
+function myPromiseAll(promises) {
+    return new Promise((resolve, reject) => {
+        // 边界处理
+        if (!Array.isArray(promises)) {
+            return reject(new TypeError('参数必须是数组'));
+        }
+      
+        const results = []; // 存储结果
+        let completedCount = 0; // 已完成的数量
+        const total = promises.length;
+      
+        // 空数组直接成功
+        if (total === 0) {
+            return resolve(results);
+        }
+      
+        // 遍历每个 Promise
+        promises.forEach((promise, index) => {
+            // 确保是 Promise（兼容普通值）
+            Promise.resolve(promise)
+                .then(value => {
+                    results[index] = value; // 保持顺序
+                    completedCount++;
+                  
+                    // 全部完成才 resolve
+                    if (completedCount === total) {
+                        resolve(results);
+                    }
+                })
+                .catch(err => {
+                    // 任意一个失败立即 reject
+                    reject(err);
+                });
+        });
+    });
+}
+
+// 测试
+myPromiseAll([
+    Promise.resolve(1),
+    Promise.resolve(2),
+    Promise.resolve(3)
+])
+.then(results => console.log(results)); // [1, 2, 3]
+```
+
+**思路**: 用计数器跟踪完成数量，任一失败立即 reject，全部成功才 resolve。
+
+---
+
+**题目3: 串行执行 Promise 数组**
+```javascript
+/**
+ * 按顺序依次执行 Promise，前一个完成才执行下一个
+ * @param {Array<Function>} tasks - 返回 Promise 的函数数组
+ * @returns {Promise<Array>} 所有结果的数组
+ */
+function runSequential(tasks) {
+    return tasks.reduce((promiseChain, currentTask) => {
+        return promiseChain.then(results => {
+            // 执行当前任务
+            return currentTask().then(result => {
+                // 把结果加入数组
+                return [...results, result];
+            });
+        });
+    }, Promise.resolve([])); // 初始值是已 resolve 的空数组
+}
+
+// 使用示例
+const tasks = [
+    () => loadImg('img1.jpg'),
+    () => loadImg('img2.jpg'),
+    () => loadImg('img3.jpg')
+];
+
+runSequential(tasks)
+    .then(images => console.log('全部串行加载完成', images));
+```
+
+**思路**: 用 `reduce` 把 Promise 链起来，每次返回新的 Promise 等待当前任务完成。
+
+---
+
+**题目4: 实现一个请求重试函数**
+```javascript
+/**
+ * 请求失败时自动重试
+ * @param {Function} fn - 返回 Promise 的函数
+ * @param {number} maxRetries - 最大重试次数
+ * @returns {Promise}
+ */
+async function retryRequest(fn, maxRetries = 3) {
+    for (let i = 0; i <= maxRetries; i++) {
+        try {
+            // 尝试执行
+            const result = await fn();
+            return result; // 成功则直接返回
+        } catch (err) {
+            // 最后一次失败，抛出错误
+            if (i === maxRetries) {
+                throw new Error(`重试${maxRetries}次后仍失败: ${err.message}`);
+            }
+            // 否则继续下一轮
+            console.log(`第${i + 1}次失败，准备重试...`);
+        }
     }
 }
 
-// 调用这个 async 函数
-displayImages();
+// 使用示例
+retryRequest(() => loadImg('unstable.jpg'), 3)
+    .then(img => console.log('加载成功'))
+    .catch(err => console.error(err.message));
 ```
+
+**思路**: 用循环 + try/catch，成功则返回，失败则继续循环，直到达到最大次数。
+
+---
+
+**题目5: 并发控制（限制同时执行的 Promise 数量）**
+```javascript
+/**
+ * 限制并发数量的 Promise 调度器
+ * @param {Array<Function>} tasks - 任务函数数组
+ * @param {number} limit - 最大并发数
+ */
+async function concurrentControl(tasks, limit = 2) {
+    const results = []; // 存储结果
+    const executing = []; // 正在执行的 Promise
+  
+    for (const [index, task] of tasks.entries()) {
+        // 创建 Promise
+        const p = Promise.resolve().then(() => task());
+        results[index] = p; // 保存到结果数组
+      
+        // 如果达到并发上限，等待最快的一个完成
+        if (tasks.length >= limit) {
+            const e = p.then(() => {
+                // 完成后从执行队列中移除
+                executing.splice(executing.indexOf(e), 1);
+            });
+            executing.push(e);
+          
+            if (executing.length >= limit) {
+                await Promise.race(executing);
+            }
+        }
+    }
+  
+    // 等待所有任务完成
+    return Promise.all(results);
+}
+
+// 使用示例
+const tasks = [
+    () => loadImg('1.jpg'),
+    () => loadImg('2.jpg'),
+    () => loadImg('3.jpg'),
+    () => loadImg('4.jpg'),
+    () => loadImg('5.jpg')
+];
+
+concurrentControl(tasks, 2).then(results => {
+    console.log('全部完成，最多同时2个并发');
+});
+```
+
+**思路**: 用队列维护正在执行的 Promise，达到上限时用 `Promise.race` 等待最快的完成。
+
+---
+
+**题目6: Promise 链式调用输出顺序**
+```javascript
+/**
+ * 问：以下代码的输出顺序是什么？
+ */
+console.log('1');
+
+Promise.resolve()
+    .then(() => {
+        console.log('2');
+        return Promise.resolve('3');
+    })
+    .then(res => {
+        console.log(res);
+    });
+
+console.log('4');
+
+// 输出顺序：1 → 4 → 2 → 3
+```
+
+**答案**: 1 → 4 → 2 → 3
+
+**思路**: 同步代码先执行（1, 4），Promise 的 .then 是微任务，等同步代码执行完才执行（2），返回的 Promise 再次进入微任务队列（3）。
+
+---
+
+**题目7: async/await 错误处理**
+```javascript
+/**
+ * 用 async/await 实现多个请求，其中一个失败不影响其他
+ * @param {Array<string>} urls - 图片地址数组
+ */
+async function loadAllWithErrorHandling(urls) {
+    const results = [];
+  
+    for (const url of urls) {
+        try {
+            const img = await loadImg(url);
+            results.push({ status: 'success', value: img });
+        } catch (err) {
+            // 单个失败不影响后续
+            results.push({ status: 'error', reason: err.message });
+        }
+    }
+  
+    return results;
+}
+
+// 使用
+loadAllWithErrorHandling(['a.jpg', 'bad.jpg', 'c.jpg'])
+    .then(results => {
+        results.forEach((result, i) => {
+            if (result.status === 'success') {
+                console.log(`图片${i}成功`);
+            } else {
+                console.log(`图片${i}失败: ${result.reason}`);
+            }
+        });
+    });
+```
+
+**思路**: 给每个 await 单独包 try/catch，失败时记录错误但继续执行。
+
+---
+
+**题目8: 实现 Promise.race（手写）**
+```javascript
+/**
+ * 手写 Promise.race
+ * @param {Array<Promise>} promises
+ * @returns {Promise} 最先完成的结果
+ */
+function myPromiseRace(promises) {
+    return new Promise((resolve, reject) => {
+        // 边界检查
+        if (!Array.isArray(promises)) {
+            return reject(new TypeError('参数必须是数组'));
+        }
+      
+        // 空数组永远 pending
+        if (promises.length === 0) {
+            return;
+        }
+      
+        // 遍历所有 Promise
+        promises.forEach(promise => {
+            // 确保是 Promise
+            Promise.resolve(promise)
+                .then(resolve)  // 任一成功立即 resolve
+                .catch(reject); // 任一失败立即 reject
+        });
+    });
+}
+
+// 测试
+myPromiseRace([
+    new Promise(resolve => setTimeout(() => resolve('慢'), 2000)),
+    new Promise(resolve => setTimeout(() => resolve('快'), 1000))
+])
+.then(result => console.log(result)); // '快'
+```
+
+**思路**: 给每个 Promise 都注册回调，第一个完成的直接 resolve/reject。
+
+---
+
+**题目9: 红绿灯问题（Promise 实现）**
+```javascript
+/**
+ * 实现红绿灯：红灯3秒 → 绿灯2秒 → 黄灯1秒，循环
+ */
+function sleep(duration) {
+    return new Promise(resolve => setTimeout(resolve, duration));
+}
+
+async function trafficLight() {
+    while (true) {
+        console.log('红灯');
+        await sleep(3000);
+      
+        console.log('绿灯');
+        await sleep(2000);
+      
+        console.log('黄灯');
+        await sleep(1000);
+    }
+}
+
+trafficLight(); // 启动
+```
+
+**思路**: 用 `async/await` + 延时 Promise 实现循环等待。
+
+---
+
+**题目10: 实现 Promise.allSettled（手写）**
+```javascript
+/**
+ * 手写 Promise.allSettled
+ * 等待所有 Promise 完成，返回每个的状态和结果
+ */
+function myPromiseAllSettled(promises) {
+    return new Promise((resolve) => {
+        const results = [];
+        let completedCount = 0;
+        const total = promises.length;
+      
+        if (total === 0) {
+            return resolve(results);
+        }
+      
+        promises.forEach((promise, index) => {
+            Promise.resolve(promise)
+                .then(value => {
+                    results[index] = {
+                        status: 'fulfilled',
+                        value
+                    };
+                })
+                .catch(reason => {
+                    results[index] = {
+                        status: 'rejected',
+                        reason
+                    };
+                })
+                .finally(() => {
+                    completedCount++;
+                    if (completedCount === total) {
+                        resolve(results);
+                    }
+                });
+        });
+    });
+}
+
+// 测试
+myPromiseAllSettled([
+    Promise.resolve(1),
+    Promise.reject('错误'),
+    Promise.resolve(3)
+])
+.then(results => console.log(results));
+// [
+//   { status: 'fulfilled', value: 1 },
+//   { status: 'rejected', reason: '错误' },
+//   { status: 'fulfilled', value: 3 }
+// ]
+```
+
+**思路**: 给每个 Promise 都加 .then 和 .catch，记录状态，全部完成才 resolve，永远不 reject。

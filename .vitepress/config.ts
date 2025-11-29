@@ -129,26 +129,12 @@ export default defineConfig({
        * 算法分类侧边栏 - 嵌套结构示例
        * ========================================
        * 
-       * 文件结构：
-       * 0.算法/
-       * ├── index.md                    # 概览页
-       * ├── 数据结构/                    # 子目录
-       * │   ├── 数组.md
-       * │   ├── 链表.md
-       * │   └── 树.md
-       * └── LeetCode/                   # 子目录
-       *     ├── 简单题.md
-       *     └── 中等题.md
        */
       '/知识库/前端/': [
         {
           text: '前端知识库',
           collapsed: true,
           items: [
-            {
-              text: '概览',
-              link: '/知识库/前端/index'
-            },
             {
               text: 'API接口网站',
               link: '/知识库/前端/API接口网站'
@@ -200,31 +186,76 @@ export default defineConfig({
               collapsed: true,
               items: [
                 {
+                  text: '面试真题100道',
+                  collapsed: true,
+                  items: [
+                    { text: 'Ajax-Fetch-Axios区别', link: '/知识库/前端/1.三剑客/2周刷完100道前端优质面试真题/[26.2]--26-3-Ajax-Fetch-Axios三者有什么区别' },
+                    { text: '防抖', link: '/知识库/前端/1.三剑客/2周刷完100道前端优质面试真题/[26.3]--26-4-防抖和节流有什么区别，分别用于什么场景-防抖' },
+                    { text: '节流', link: '/知识库/前端/1.三剑客/2周刷完100道前端优质面试真题/[26.4]--26-5-防抖和节流有什么区别，分别用于什么场景-节流' },
+                    { text: 'CSS单位区别', link: '/知识库/前端/1.三剑客/2周刷完100道前端优质面试真题/[26.5]--26-6-px-em-rem-vw-vh有什么区别' },
+                    { text: '箭头函数限制', link: '/知识库/前端/1.三剑客/2周刷完100道前端优质面试真题/[26.6]--26-7-什么时候不能使用箭头函数' },
+                    { text: 'TCP握手挥手', link: '/知识库/前端/1.三剑客/2周刷完100道前端优质面试真题/[26.7]--26-8-请描述TPC三次握手和四次挥手' },
+                    { text: 'for-in和for-of', link: '/知识库/前端/1.三剑客/2周刷完100道前端优质面试真题/[26.8]--26-9-JS中for-in和for-of有什么区别' },
+                    { text: 'for-await-of', link: '/知识库/前端/1.三剑客/2周刷完100道前端优质面试真题/[26.9]--26-10-【连环问】for-await-of有什么作用' },
+                    { text: 'offsetHeight等', link: '/知识库/前端/1.三剑客/2周刷完100道前端优质面试真题/[26.10]--26-11-offsetHeight-scrollHeight-' },
+                    { text: 'computed和watch', link: '/知识库/前端/1.三剑客/2周刷完100道前端优质面试真题/[26.12]--26-13-Vue中computed和watch有什么区别' },
+                    { text: 'Vue组件通讯-emit', link: '/知识库/前端/1.三剑客/2周刷完100道前端优质面试真题/[26.13]--26-14-Vue组件通讯有几种方式，尽量全面-props-em' },
+                    { text: 'Vue组件通讯-attr', link: '/知识库/前端/1.三剑客/2周刷完100道前端优质面试真题/[26.14]--26-15-Vue组件通讯有几种方式，尽量全面-props-a' },
+                    { text: 'Vue组件通讯-parent', link: '/知识库/前端/1.三剑客/2周刷完100道前端优质面试真题/[26.15]--26-16-Vue组件通讯有几种方式，尽量全面-props-p' },
+                    { text: 'Vue组件通讯-provide', link: '/知识库/前端/1.三剑客/2周刷完100道前端优质面试真题/[26.16]--26-17-Vue组件通讯有几种方式，尽量全面-props-pr' },
+                    { text: 'Vuex-action和mutation', link: '/知识库/前端/1.三剑客/2周刷完100道前端优质面试真题/[26.17]--26-18-Vuex中action和mutation有什么区别' },
+                    { text: 'JS严格模式', link: '/知识库/前端/1.三剑客/2周刷完100道前端优质面试真题/[26.18]--26-19-JS严格模式有什么特点' },
+                    { text: 'HTTP跨域options', link: '/知识库/前端/1.三剑客/2周刷完100道前端优质面试真题/[26.19]--26-20-HTTP跨域时为何要发送options请求' },
+                    { text: '垃圾回收算法', link: '/知识库/前端/1.三剑客/2周刷完100道前端优质面试真题/[27.2]--27-4-JS内存垃圾回收用什么算法' },
+                    { text: '闭包内存泄漏', link: '/知识库/前端/1.三剑客/2周刷完100道前端优质面试真题/[27.3]--27-5-【连环问】JS闭包是内存泄漏吗' },
+                    { text: '检测内存泄漏', link: '/知识库/前端/1.三剑客/2周刷完100道前端优质面试真题/[27.4]--27-6-如何检测JS内存泄漏' },
+                    { text: '内存泄漏场景', link: '/知识库/前端/1.三剑客/2周刷完100道前端优质面试真题/[27.5]--27-7-JS内存泄漏的场景有哪些' },
+                    { text: '浏览器EventLoop', link: '/知识库/前端/1.三剑客/2周刷完100道前端优质面试真题/[27.7]--27-9-浏览器和nodejs事件循环（EventLoop）' },
+                    { text: 'nodejs EventLoop', link: '/知识库/前端/1.三剑客/2周刷完100道前端优质面试真题/[27.8]--27-10-浏览器和nodejs事件循环（EventLoop）' },
+                    { text: '虚拟DOM性能', link: '/知识库/前端/1.三剑客/2周刷完100道前端优质面试真题/[27.9]--27-11-虚拟DOM（vdom）真的很快吗' },
+                    { text: 'for和forEach性能', link: '/知识库/前端/1.三剑客/2周刷完100道前端优质面试真题/[27.10]--27-12-遍历一个数组用for和forEach哪个更快' },
+                    { text: 'nodejs多进程-概念', link: '/知识库/前端/1.三剑客/2周刷完100道前端优质面试真题/[27.11]--27-13-nodejs如何开启多进程，进程如何通讯-进程和线程' },
+                    { text: 'nodejs多进程-开启', link: '/知识库/前端/1.三剑客/2周刷完100道前端优质面试真题/[27.12]--27-14-nodejs如何开启多进程，进程如何通讯' },
+                    { text: 'nodejs多进程-通讯', link: '/知识库/前端/1.三剑客/2周刷完100道前端优质面试真题/[27.13]--27-15-nodejs如何开启多进程，进程如何通讯' },
+                    { text: 'js-bridge原理', link: '/知识库/前端/1.三剑客/2周刷完100道前端优质面试真题/[27.14]--27-16-请描述js-bridge的实现原理' },
+                    { text: 'requestIdleCallback', link: '/知识库/前端/1.三剑客/2周刷完100道前端优质面试真题/[27.15]--27-17-requestIdleCallback和reques' },
+                    { text: 'Vue生命周期', link: '/知识库/前端/1.三剑客/2周刷完100道前端优质面试真题/[27.16]--27-18-Vue每个生命周期都做了什么' },
+                    { text: 'diff算法对比', link: '/知识库/前端/1.三剑客/2周刷完100道前端优质面试真题/[27.17]--27-19-Vue2和Vue3和React三者的diff算法有什' },
+                    { text: 'MemoryHistory', link: '/知识库/前端/1.三剑客/2周刷完100道前端优质面试真题/[27.18]--27-20-Vue-router的MemoryHistory是什' }
+                  ]
+                },
+                {
                   text: 'CSS',
                   collapsed: true,
                   items: [
-                    { text: '垂直对齐', link: '/知识库/前端/1.三剑客/css/垂直对齐' },
-                    { text: '弹性宽度设计', link: '/知识库/前端/1.三剑客/css/弹性宽度设计和文本处理' },
-                    { text: '盒模型', link: '/知识库/前端/1.三剑客/css/盒模型' },
-                    { text: '圣杯布局', link: '/知识库/前端/1.三剑客/css/圣杯布局 (Holy Grail Layout)' },
-                    { text: '视口单位', link: '/知识库/前端/1.三剑客/css/视口单位' },
-                    { text: '水平对齐', link: '/知识库/前端/1.三剑客/css/水平对齐' },
-                    { text: '响应式字体', link: '/知识库/前端/1.三剑客/css/响应式字体' },
-                    { text: '行高继承', link: '/知识库/前端/1.三剑客/css/行高继承' },
-                    { text: 'BFC', link: '/知识库/前端/1.三剑客/css/BFC (块格式化上下文)' },
-                    { text: 'CSS定位', link: '/知识库/前端/1.三剑客/css/CSS 定位' },
-                    { text: 'Flex骰子布局', link: '/知识库/前端/1.三剑客/css/Flex 骰子布局' },
-                    { text: 'margin负值', link: '/知识库/前端/1.三剑客/css/margin负值' },
-                    { text: 'margin纵向重叠', link: '/知识库/前端/1.三剑客/css/margin纵向重叠' },
-                    { text: 'CSS知识库', link: '/知识库/前端/1.三剑客/css/学习/CSS 完整知识库与面试宝典' },
-                    { text: 'CSS3开发文档', link: '/知识库/前端/1.三剑客/css/学习/CSS3 完整开发文档与面试指南' },
-                    { text: 'Tailwind CSS', link: '/知识库/前端/1.三剑客/css/学习/Tailwind CSS 零基础实战指南' }
+                    { text: 'CSS完整知识库', link: '/知识库/前端/1.三剑客/css/CSS 完整知识库' },
+                    { text: 'Tailwind CSS指南', link: '/知识库/前端/1.三剑客/css/Tailwind CSS 零基础实战指南' },
+                    {
+                      text: '基础知识',
+                      collapsed: true,
+                      items: [
+                        { text: '垂直对齐', link: '/知识库/前端/1.三剑客/css/基础知识/垂直对齐' },
+                        { text: '弹性宽度设计', link: '/知识库/前端/1.三剑客/css/基础知识/弹性宽度设计和文本处理' },
+                        { text: '盒模型', link: '/知识库/前端/1.三剑客/css/基础知识/盒模型' },
+                        { text: '圣杯布局', link: '/知识库/前端/1.三剑客/css/基础知识/圣杯布局' },
+                        { text: '视口单位', link: '/知识库/前端/1.三剑客/css/基础知识/视口单位' },
+                        { text: '水平对齐', link: '/知识库/前端/1.三剑客/css/基础知识/水平对齐' },
+                        { text: '响应式字体', link: '/知识库/前端/1.三剑客/css/基础知识/响应式字体' },
+                        { text: '行高继承', link: '/知识库/前端/1.三剑客/css/基础知识/行高继承' },
+                        { text: 'BFC', link: '/知识库/前端/1.三剑客/css/基础知识/BFC (块格式化上下文)' },
+                        { text: 'CSS定位', link: '/知识库/前端/1.三剑客/css/基础知识/CSS 定位' },
+                        { text: 'Flex骰子布局', link: '/知识库/前端/1.三剑客/css/基础知识/Flex 骰子布局' },
+                        { text: 'margin负值', link: '/知识库/前端/1.三剑客/css/基础知识/margin负值' },
+                        { text: 'margin纵向重叠', link: '/知识库/前端/1.三剑客/css/基础知识/margin纵向重叠' }
+                      ]
+                    }
                   ]
                 },
                 {
                   text: 'JavaScript',
                   collapsed: true,
                   items: [
+                    { text: '数组操作', link: '/知识库/前端/1.三剑客/js/JavaScript 中常用的数组操作' },
                     {
                       text: '基础知识',
                       collapsed: true,
@@ -234,36 +265,19 @@ export default defineConfig({
                         { text: 'bind实现', link: '/知识库/前端/1.三剑客/js/基础知识/模拟版本 bind1' },
                         { text: '深拷贝', link: '/知识库/前端/1.三剑客/js/基础知识/深拷贝函数' },
                         { text: '事件处理', link: '/知识库/前端/1.三剑客/js/基础知识/事件处理' },
+                        { text: '数组扁平化', link: '/知识库/前端/1.三剑客/js/基础知识/数组扁平化函数' },
                         { text: '同步异步', link: '/知识库/前端/1.三剑客/js/基础知识/同步异步' },
-                        { text: '事件冒泡', link: '/知识库/前端/1.三剑客/js/基础知识/阻止事件冒泡和默认行为，防止页面滚动' },
+                        { text: 'Event Loop', link: '/知识库/前端/1.三剑客/js/基础知识/Event Loop（事件循环）' },
                         { text: 'Promise和async', link: '/知识库/前端/1.三剑客/js/基础知识/Promise和async await' }
                       ]
                     },
                     {
-                      text: '异步进阶',
+                      text: '模块功能',
                       collapsed: true,
                       items: [
-                        { text: '异步面试题', link: '/知识库/前端/1.三剑客/js/js-异步进阶/异步编程核心概念的面试题' },
-                        { text: 'Event Loop', link: '/知识库/前端/1.三剑客/js/js-异步进阶/Event Loop（事件循环）' }
-                      ]
-                    },
-                    {
-                      text: 'Web API',
-                      collapsed: true,
-                      items: [
-                        { text: '事件绑定', link: '/知识库/前端/1.三剑客/js/js-web-api/通用事件绑定函数' },
-                        { text: 'Ajax工具', link: '/知识库/前端/1.三剑客/js/js-web-api/ajax 工具函数' },
-                        { text: 'DOM操作', link: '/知识库/前端/1.三剑客/js/js-web-api/DOM 操作核心知识开发文档' },
-                        { text: 'Map数据结构', link: '/知识库/前端/1.三剑客/js/js-web-api/Map数据结构' }
-                      ]
-                    },
-                    {
-                      text: 'JS基础',
-                      collapsed: true,
-                      items: [
-                        { text: '深度比较', link: '/知识库/前端/1.三剑客/js/js基础/深度比较两个 JavaScript 变量' },
-                        { text: '数组扁平化', link: '/知识库/前端/1.三剑客/js/js基础/数组扁平化函数' },
-                        { text: '数组操作', link: '/知识库/前端/1.三剑客/js/js基础/JavaScript 中常用的数组操作' }
+                        { text: '图片转Base64', link: '/知识库/前端/1.三剑客/js/模块/使用JavaScript将图片转换为Base64' },
+                        { text: 'Ajax工具', link: '/知识库/前端/1.三剑客/js/模块/ajax 工具函数' },
+                        { text: 'DOM操作', link: '/知识库/前端/1.三剑客/js/模块/DOM 操作核心知识开发文档' }
                       ]
                     }
                   ]
@@ -274,6 +288,12 @@ export default defineConfig({
               text: '2. Vue学习',
               collapsed: true,
               items: [
+                { text: 'npm', link: '/知识库/前端/2.vue学习/npm' },
+                { text: 'Vue深度解析', link: '/知识库/前端/2.vue学习/Vue  深度解析与实践文档' },
+                { text: 'Vue权限管理', link: '/知识库/前端/2.vue学习/Vue 权限管理' },
+                { text: 'Vue生命周期', link: '/知识库/前端/2.vue学习/Vue 生命周期' },
+                { text: 'Vue项目架构', link: '/知识库/前端/2.vue学习/Vue 项目架构' },
+                { text: 'Vue3 Composition', link: '/知识库/前端/2.vue学习/Vue3 Composition' },
                 {
                   text: '基础知识',
                   collapsed: true,
@@ -281,29 +301,22 @@ export default defineConfig({
                     { text: 'data属性', link: '/知识库/前端/2.vue学习/基础知识/data属性' },
                     { text: 'SPA性能优化', link: '/知识库/前端/2.vue学习/基础知识/SPA 性能优化, 首屏加载,' },
                     { text: 'v-if和v-for', link: '/知识库/前端/2.vue学习/基础知识/v-if和 v-for 的基本作用' },
-                    { text: 'Vue深度解析', link: '/知识库/前端/2.vue学习/基础知识/Vue  深度解析与实践文档' },
-                    { text: '数据格式化', link: '/知识库/前端/2.vue学习/基础知识/Vue 2 数据格式化' },
                     { text: '响应式陷阱', link: '/知识库/前端/2.vue学习/基础知识/Vue 2 中一个常见的响应式陷阱' },
+                    { text: 'Vue3设计目标', link: '/知识库/前端/2.vue学习/基础知识/Vue 3 设计目标与优化' },
+                    { text: 'Vue3响应式', link: '/知识库/前端/2.vue学习/基础知识/Vue 3 响应式原理,' },
+                    { text: 'Tree Shaking', link: '/知识库/前端/2.vue学习/基础知识/Vue 3 的 Tree Shaking' },
                     { text: 'Vue3 vs Vue2', link: '/知识库/前端/2.vue学习/基础知识/Vue 3 vs. Vue 2' },
-                    { text: '权限管理', link: '/知识库/前端/2.vue学习/基础知识/Vue 权限管理' },
-                    { text: '生命周期', link: '/知识库/前端/2.vue学习/基础知识/Vue 生命周期' },
-                    { text: 'Vue实例化', link: '/知识库/前端/2.vue学习/基础知识/Vue 实例化 生命周期' },
-                    { text: '项目架构', link: '/知识库/前端/2.vue学习/基础知识/Vue 项目架构' },
                     { text: '修饰符', link: '/知识库/前端/2.vue学习/基础知识/Vue 修饰符' },
                     { text: '虚拟DOM', link: '/知识库/前端/2.vue学习/基础知识/Vue 虚拟DOM' },
                     { text: 'v-if和v-show', link: '/知识库/前端/2.vue学习/基础知识/Vue 指令 v-if v-show' },
                     { text: '错误处理', link: '/知识库/前端/2.vue学习/基础知识/Vue 中错误处理' },
-                    { text: '自定义指令', link: '/知识库/前端/2.vue学习/基础知识/Vue 自定义指令' },
                     { text: '组件化slot', link: '/知识库/前端/2.vue学习/基础知识/Vue 组件化 slot 插槽 内容分发' },
                     { text: '组件通信', link: '/知识库/前端/2.vue学习/基础知识/Vue 组件通信' },
                     { text: 'keep-alive', link: '/知识库/前端/2.vue学习/基础知识/Vue keep-alive' },
                     { text: 'key属性', link: '/知识库/前端/2.vue学习/基础知识/Vue key' },
                     { text: 'nextTick', link: '/知识库/前端/2.vue学习/基础知识/Vue nextTick' },
-                    { text: 'SSR', link: '/知识库/前端/2.vue学习/基础知识/Vue SSR' },
                     { text: 'diff算法', link: '/知识库/前端/2.vue学习/基础知识/vue的diff算法' },
-                    { text: '前端路由', link: '/知识库/前端/2.vue学习/基础知识/Vue前端路由' },
                     { text: '双向数据绑定', link: '/知识库/前端/2.vue学习/基础知识/Vue双向数据绑定' },
-                    { text: '部署404问题', link: '/知识库/前端/2.vue学习/基础知识/Vue项目部署404问题' },
                     { text: '跨域问题', link: '/知识库/前端/2.vue学习/基础知识/Vue项目跨域问题' }
                   ]
                 },
@@ -311,13 +324,39 @@ export default defineConfig({
                   text: '模块功能',
                   collapsed: true,
                   items: [
-                    { text: 'axios题目', link: '/知识库/前端/2.vue学习/模块/网络模块-axios/axios 题目' },
-                    { text: 'axios使用', link: '/知识库/前端/2.vue学习/模块/网络模块-axios/axios' },
-                    { text: 'Excel库', link: '/知识库/前端/2.vue学习/模块/excel导入导出/库' },
-                    { text: 'Excel-xlsx', link: '/知识库/前端/2.vue学习/模块/excel导入导出/Vue 3 轻松搞定 Excel（xlsx SheetJS)' },
-                    { text: 'Excel-exceljs', link: '/知识库/前端/2.vue学习/模块/excel导入导出/Vue3 exceljs库实现前端导入导出Excel' },
-                    { text: 'Pinia权限管理', link: '/知识库/前端/2.vue学习/模块/pinia+权限管理+角色管理+路由拦截/项目介绍' },
-                    { text: '业务逻辑面试题', link: '/知识库/前端/2.vue学习/模块/pinia+权限管理+角色管理+路由拦截/业务逻辑面试题' }
+                    {
+                      text: 'axios网络模块',
+                      collapsed: true,
+                      items: [
+                        { text: 'axios题目', link: '/知识库/前端/2.vue学习/模块/网络模块-axios/axios 题目' },
+                        { text: 'axios文档', link: '/知识库/前端/2.vue学习/模块/网络模块-axios/axios文档' }
+                      ]
+                    },
+                    {
+                      text: 'Excel导入导出',
+                      collapsed: true,
+                      items: [
+                        { text: 'Excel库', link: '/知识库/前端/2.vue学习/模块/excel导入导出/库' },
+                        { text: 'xlsx SheetJS', link: '/知识库/前端/2.vue学习/模块/excel导入导出/Vue 3 轻松搞定 Excel（xlsx SheetJS)' },
+                        { text: 'exceljs实现', link: '/知识库/前端/2.vue学习/模块/excel导入导出/Vue3 exceljs库实现前端导入导出Excel' }
+                      ]
+                    },
+                    {
+                      text: 'Pinia状态管理',
+                      collapsed: true,
+                      items: [
+                        { text: 'Pinia知识体系', link: '/知识库/前端/2.vue学习/模块/状态管理库-Pinina/Pinia 知识体系与面试指南' },
+                        { text: 'Pinia面试题', link: '/知识库/前端/2.vue学习/模块/状态管理库-Pinina/Pinina面试题' }
+                      ]
+                    },
+                    {
+                      text: '插件开发',
+                      collapsed: true,
+                      items: [
+                        { text: '插件介绍', link: '/知识库/前端/2.vue学习/模块/插件/插件介绍' },
+                        { text: 'Vue组件与插件', link: '/知识库/前端/2.vue学习/模块/插件/Vue组件与插件' }
+                      ]
+                    }
                   ]
                 }
               ]
@@ -328,15 +367,30 @@ export default defineConfig({
               items: [
                 { text: '小程序开发文档', link: '/知识库/前端/3.微信小程序/微信小程序完整开发学习文档' },
                 {
-                  text: '功能模板',
+                  text: '功能模块',
                   collapsed: true,
                   items: [
-                    { text: '微信登录', link: '/知识库/前端/3.微信小程序/模板/微信登录/微信登录解析和代码' },
-                    { text: '订阅消息-代码', link: '/知识库/前端/3.微信小程序/模板/微信订阅功能/微信订阅消息-代码' },
-                    { text: '订阅消息-文档', link: '/知识库/前端/3.微信小程序/模板/微信订阅功能/微信订阅消息实现文档' },
-                    { text: '微信支付-代码', link: '/知识库/前端/3.微信小程序/模板/微信支付/微信支付代码' },
-                    { text: '微信支付-架构', link: '/知识库/前端/3.微信小程序/模板/微信支付/微信支付技术架构深度解析' },
-                    { text: '微信支付-准备', link: '/知识库/前端/3.微信小程序/模板/微信支付/微信支付全景认知与准备工作' }
+                    { text: '微信登录', link: '/知识库/前端/3.微信小程序/模块/微信登录/微信登录解析和代码' },
+                    {
+                      text: '订阅消息',
+                      collapsed: true,
+                      items: [
+                        { text: '订阅消息-代码', link: '/知识库/前端/3.微信小程序/模块/微信订阅功能/微信订阅消息-代码' },
+                        { text: '订阅消息-文档', link: '/知识库/前端/3.微信小程序/模块/微信订阅功能/微信订阅消息实现文档' },
+                        { text: '订阅学习', link: '/知识库/前端/3.微信小程序/模块/微信订阅功能/微信订阅学习' },
+                        { text: '订阅坑点解决', link: '/知识库/前端/3.微信小程序/模块/微信订阅功能/微信小程序订阅消息及遇到的种种坑解决方法（全）' }
+                      ]
+                    },
+                    {
+                      text: '微信支付',
+                      collapsed: true,
+                      items: [
+                        { text: '微信支付-代码', link: '/知识库/前端/3.微信小程序/模块/微信支付/微信支付代码' },
+                        { text: '微信支付-架构', link: '/知识库/前端/3.微信小程序/模块/微信支付/微信支付技术架构深度解析' },
+                        { text: '微信支付-链接', link: '/知识库/前端/3.微信小程序/模块/微信支付/微信支付链接' },
+                        { text: '微信支付-准备', link: '/知识库/前端/3.微信小程序/模块/微信支付/微信支付全景认知与准备工作' }
+                      ]
+                    }
                   ]
                 }
               ]
@@ -345,8 +399,30 @@ export default defineConfig({
               text: '4. uni-app学习',
               collapsed: true,
               items: [
-                { text: '基础知识', link: '/知识库/前端/4..uniapp学习/基础/基础知识' },
-                { text: 'uniapp基础', link: '/知识库/前端/4..uniapp学习/基础/uniapp基础知识' }
+                { text: 'uniapp-api和原生api', link: '/知识库/前端/4.uniapp学习/uniapp-api和原生api' },
+                {
+                  text: '基础知识',
+                  collapsed: true,
+                  items: [
+                    { text: '基础知识', link: '/知识库/前端/4.uniapp学习/基础/基础知识' },
+                    { text: 'uniapp基础', link: '/知识库/前端/4.uniapp学习/基础/uniapp基础知识' },
+                    { text: 'uniapp入门教程', link: '/知识库/前端/4.uniapp学习/基础/uniapp入门超详细教程_如何从零开始搭建项目' }
+                  ]
+                },
+                {
+                  text: '模块功能',
+                  collapsed: true,
+                  items: [
+                    { text: '列表组件设计', link: '/知识库/前端/4.uniapp学习/模块/列表组件设计' }
+                  ]
+                },
+                {
+                  text: 'uView UI',
+                  collapsed: true,
+                  items: [
+                    { text: 'uView基础', link: '/知识库/前端/4.uniapp学习/uView UI/基础知识' }
+                  ]
+                }
               ]
             }
           ]

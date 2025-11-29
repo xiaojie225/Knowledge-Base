@@ -1,210 +1,873 @@
-
-## **开发文档：深入解析 v-if 与 v-for 的优先级演进与最佳实践**
-
-本指南旨在彻底厘清 `v-if` 与 `v-for` 指令的优先级关系，对比 Vue 2 和 Vue 3 的核心差异，并提供一套可在任何现代 Vue 项目中应用的、符合软件设计原则的最佳实践。
-
-### **一、核心知识：优先级的历史演变**
-
-#### **1. Vue 2.x 行为 (Legacy): `v-for` 优先级更高**
-
-在 Vue 2 中，当 `v-if` 和 `v-for` 同时用在一个元素上时，`v-for` 会先生效。
-
-*   **表现**: 循环会首先被执行，然后对于**每一个循环出的元素**，再执行 `v-if` 的判断。
-*   **源码证据**: Vue 2 的编译器代码中，处理 `for` 循环的 `genFor` 函数调用在 `genIf` 之前。
-*   **带来的问题**: 性能浪费。即使我们只需要渲染列表中的一小部分，`v-for` 也会遍历整个列表，然后在每次迭代中都进行一次 `v-if` 判断。
-    ```html
-    <!-- Vue 2 中的不推荐用法 -->
-    <!-- 假设 users 是一个1000人的数组，但只有1个 active -->
-    <!-- 这会循环1000次，然后进行1000次 if 判断，最终只渲染1个元素 -->
-    <div v-for="user in users" v-if="user.isActive" :key="user.id">
-      {{ user.name }}
-    </div>
-    ```
-
-#### **2. Vue 3.x 行为 (Current): `v-if` 优先级更高**
-
-在 Vue 3 中，这个行为被颠覆了。当 `v-if` 和 `v-for` 同时用在一个元素上时，`v-if` 会先生效。
-
-*   **表现**: `v-if` 的条件会先被判断。如果判断为 `false`，那么 `v-for` 的循环将根本**不会被执行**。
-*   **KISS原则的体现 (为什么改变？)**:
-    1.  **更直观**: `if` 优于 `for` 更符合人类逻辑——先判断一个前置条件，再决定是否要循环。
-    2.  **避免逻辑悖论**: 在 Vue 3 中，`v-if` 无法访问到 `v-for` 作用域中的变量（如 `user`），因为 `v-if` 先执行，此时 `v-for` 还没开始。这从语法层面就阻止了在 `v-if` 中使用循环变量的错误写法。
-    ```html
-    <!-- Vue 3 中的错误用法 -->
-    <!-- 这样做会直接报错，因为 `v-if` 先执行，此时 `user` 变量还不存在 -->
-    <div v-for="user in users" v-if="user.isActive" :key="user.id">
-      {{ user.name }}
-    </div>
-    <!-- 错误信息: Property "user" was accessed during render but is not defined on instance. -->
-    ```
-*   **结论**: **Vue 官方明确指出，永远不要把 `v-if` 和 `v-for` 同时用在同一个元素上。** 无论是在 Vue 2（性能问题）还是 Vue 3（语法错误），这都是一种反模式。
-
-### **二、无可争议的最佳实践 (The Vue Way)**
-
-我们应该根据业务意图，选择以下两种清晰、高效的模式。
-
-#### **模式一：条件性地渲染整个列表**
-
-*   **用途**: 当你需要根据一个条件（例如，`users` 数组是否存在或不为空）来决定是否渲染**整个列表**时。
-*   **方法**: 将 `v-if` 应用于外层容器或 `<template>` 标签上。
-    ```vue
-    <template>
-      <!-- 首先判断 users 是否为一个有内容的数组 -->
-      <ul v-if="users && users.length > 0">
-        <!-- 条件成立，才开始循环 -->
-        <li v-for="user in users" :key="user.id">
-          {{ user.name }}
-        </li>
-      </ul>
-      <!-- 条件不成立，可以显示一个提示信息 -->
-      <p v-else>
-        暂无用户数据。
-      </p>
-    </template>
-
-    <script setup>
-    const users = ref([/* ... */]);
-    </script>
-    ```
-
-#### **模式二：仅渲染列表中符合条件的项 (首选)**
-
-*   **用途**: 当你需要展示一个大列表中的**一部分**（例如，只显示“活跃”的用户）时。
-*   **方法**: 使用**计算属性 (Computed Property)** 预先过滤源数组。
-*   **原则支撑**:
-    *   **SOLID (单一职责原则)**: 组件的模板 (`<template>`) 职责是**展示**数据，保持纯粹。而**过滤数据的业务逻辑**则被封装在计算属性中。各司其职，代码清晰。
-    *   **DRY (不要重复自己)**: 计算属性是带缓存的。如果 `activeUsers` 列表在页面的多个地方被使用，它只会被计算一次，性能极佳。
-    *   **可维护性**: 过滤逻辑集中管理，易于修改、测试和复用。
-
-    ```vue
-    <template>
-      <!-- 直接循环计算后的属性，模板层非常干净 -->
-      <ul>
-        <li v-for="user in activeUsers" :key="user.id">
-          {{ user.name }}
-        </li>
-      </ul>
-    </template>
-
-    <script setup>
-    import { ref, computed } from 'vue';
-
-    const allUsers = ref([
-      { id: 1, name: 'Alice', isActive: true },
-      { id: 2, name: 'Bob', isActive: false },
-      { id: 3, name: 'Charlie', isActive: true },
-    ]);
-
-    // 计算属性封装了过滤逻辑
-    const activeUsers = computed(() => {
-      return allUsers.value.filter(user => user.isActive);
-    });
-    </script>
-    ```
-
-### **三、面试官考察**
-
-#### **技术知识题 (10题)**
-
-1.  **问题:** `v-if` 和 `v-for` 在 Vue 2 和 Vue 3 中，同时用在同一个元素上时，优先级分别是什么？
-    *   **答案:** 在 Vue 2 中，`v-for` 优先级更高。在 Vue 3 中，`v-if` 优先级更高。
-
-2.  **问题:** 为什么 Vue 3 要改变 `v-if` 和 `v-for` 的优先级？
-    *   **答案:** 为了让行为更符合直觉（先判断再循环），并从根本上防止在 `v-if` 中错误地使用 `v-for` 中的变量，从而避免了 Vue 2 中常见的性能陷阱。
-
-3.  **问题:** 在 Vue 3 中，以下代码会发生什么？为什么？
-    ```html
-    <div v-for="item in items" v-if="item.show"></div>
-    ```
-    *   **答案:** 会抛出一个模板编译错误。因为 `v-if` 优先级更高，它会先执行，此时 `item` 变量还未通过 `v-for` 创建，因此 `v-if` 在一个不存在的变量上进行判断，导致错误。
-
-4.  **问题:** 官方为什么强烈建议不要将 `v-if` 和 `v-for` 放在同一元素上？
-    *   **答案:** 因为这无论在哪个版本中都是一种反模式。在 Vue 2 中，会导致不必要的性能浪费（遍历整个列表再逐项判断）。在 Vue 3 中，会导致编译错误和逻辑混乱。这使得代码的意图不清晰且难以维护。
-
-5.  **问题:** 如果我想根据一个布尔值 `shouldShowList` 来决定是否渲染整个列表，最佳实践是什么？
-    *   **答案:** 最佳实践是将 `v-if="shouldShowList"` 放在列表容器元素（如`<ul>`）或一个 `<template>` 标签上，`v-for` 则放在内部的列表项元素（如`<li>`）上。
-
-6.  **问题:** 如果我只想显示一个数组中 `isActive` 为 `true` 的成员，最佳实践是什么？请解释其优点。
-    *   **答案:** 最佳实践是使用**计算属性 (computed)**。优点有三：1. **职责分离**，逻辑和视图解耦。2. **性能**，计算结果会被缓存，避免不必要的重复计算。3. **可维护性**，过滤逻辑集中，易于修改和复用。
-
-7.  **问题:** `v-show` 和 `v-if` 的主要区别是什么？在这种过滤场景下，可以用 `v-show` 吗？
-    *   **答案:**
-        *   **区别**: `v-if` 是“真正的”条件渲染，它会确保在切换过程中条件块内的事件监听器和子组件适当地被销毁和重建。如果初始条件为假，则什么也不做。`v-show` 只是简单地切换元素的 CSS 属性 `display`。
-        *   **适用性**: `v-show` 不适合用在 `v-for` 循环内部进行过滤，因为它仍然会渲染出所有的 DOM 元素，只是将不符合条件的隐藏掉，这在列表很长时会造成巨大的性能开销。
-
-8.  **问题:** 计算属性的缓存机制是如何工作的？
-    *   **答案:** 计算属性会追踪其依赖的响应式数据（如 `ref` 或 `reactive` 对象）。只有当这些依赖发生变化时，计算属性才会重新求值。如果依赖没有变化，多次访问计算属性会立即返回之前缓存的结果，而不会重新执行计算函数。
-
-
-
-10. **问题:** 从软件设计原则的角度，解释为什么使用 `computed` 是一种更优的模式。
-    *   **答案:** 它遵循了**单一职责原则 (SRP)**。模板的职责是声明式地渲染UI，它应该尽量简单、无逻辑。计算属性则承担了“从原始数据派生出展示所需数据”的逻辑职责。这种分离使得代码结构更清晰，逻辑部分更容易进行单元测试。
-
-#### **业务逻辑题 (10题)**
-
-1.  **场景:** 一个待办事项列表，有两个按钮“显示全部”和“仅显示未完成”。如何优雅地实现这个切换功能？
-    *   **答案:** 用一个 `ref` (例如 `filterStatus`) 来存储当前的过滤状态（'all' 或 'incomplete'）。然后创建一个计算属性 `filteredTodos`，它内部使用 `if/else` 或 `switch` 判断 `filterStatus` 的值，返回相应过滤后的待办事项数组。模板中只循环 `filteredTodos`。
-
-2.  **场景:** 一个用户权限系统，当前用户只能看到权限等级低于或等于自己的其他用户。如何实现这个列表？
-    *   **答案:** 假设当前用户的权限等级 `currentUser.level` 存储在 `ref` 或 Store 中，所有用户的列表是 `allUsers`。创建一个计算属性 `visibleUsers`，它 `filter` `allUsers` 数组，返回 `user.level <= currentUser.level` 的用户。
-
-3.  **场景:** 一个搜索框，用户输入文字后，下面的列表实时显示匹配项。
-    *   **答案:** 将搜索框的输入值绑定到一个 `ref` (`searchText`)。创建一个计算属性 `searchedItems`，它依赖于 `searchText` 和原始列表。当 `searchText` 改变时，计算属性自动重新计算，`filter` 出包含搜索文字的项。模板 `v-for` 循环 `searchedItems`。
-
-4.  **场景:** 一个文章列表，每篇文章有 `tags` 数组。现在需要根据选中的标签（可能多选）来过滤文章。
-    *   **答案:** `selectedTags` 是一个包含选中标签的 `ref` 数组。创建一个计算属性 `filteredArticles`，它 `filter` 所有文章。对于每篇文章，检查其 `article.tags` 数组是否**至少包含一个**（或要求**全部包含**，根据业务）`selectedTags` 中的标签。
-
-5.  **场景:** 电商商品列表，有多个筛选条件：价格区间、品牌、分类。
-    *   **答案:** 创建一个 `ref` 对象 `filters` 来存储所有筛选条件 `{ price: [min, max], brand: 'xxx', ... }`。创建一个计算属性 `filteredProducts`，它对原始商品列表进行链式 `.filter()` 调用，每个 `.filter()` 应用一个筛选条件。
-
-6.  **场景:** 如果一个列表非常非常大（上万条），即使使用计算属性，每次过滤也可能导致页面卡顿。有什么优化思路？
-    *   **答案:**
-        1.  **防抖 (Debounce)**: 对筛选条件的改变（尤其是输入框）进行防抖处理，避免在用户快速输入时频繁触发计算。
-        *   **虚拟列表 (Virtual List)**: 这是根本解决方案。计算属性返回过滤后的完整列表，但模板中结合虚拟列表组件，只渲染视窗内可见的几十个 DOM 元素。
-        *   **Web Worker**: 对于极其复杂的过滤逻辑，可以考虑将其放到 Web Worker 中计算，避免阻塞主线程。
-
-7.  **场景:** 如何渲染一个嵌套对象，比如一个文件目录树？
-    *   **答案:** 这是一个递归场景。创建一个可递归的组件（例如 `TreeNode.vue`）。该组件接收一个节点作为 `prop`，然后在其模板中，使用 `v-for` 循环渲染该节点的 `children` 属性，并为每个 `child` 再次调用 `TreeNode` 组件自身。`v-if` 用于判断一个节点是否有 `children`，从而决定是否渲染下一层。
-
-8.  **场景:** 表格数据需要前端分页。如何只显示当前页的数据？
-    *   **答案:** 定义 `ref` 变量 `currentPage` 和 `pageSize`。创建一个计算属性 `paginatedData`，它根据 `currentPage` 和 `pageSize` 的值，使用数组的 `.slice()` 方法从原始数据数组中“切”出当前页所需的数据段。模板中 `v-for` 循环 `paginatedData`。
-
-9.  **场景:** 后端返回的数据结构不理想，需要整理后才能展示。比如，一个扁平数组需要根据 `categoryId` 转换成一个分组的对象。
-    *   **答案:** 使用计算属性。这个计算属性的职责就是将后端返回的扁平数组，通过 `reduce` 或其他数组方法，转换成模板渲染所需的、结构化的分组对象 `{ categoryId1: [item1, item2], ... }`。模板就可以用一个嵌套的 `v-for` 来渲染。
-
-10. **场景:** 一个权限控制非常细致的列表，每一行都有多个操作按钮（编辑、删除、审核），每个按钮的显示/隐藏都依赖于该行的状态**和**用户的角色。
-    *   **答案:** 这种情况下，在 `v-for` 循环内部使用 `v-if` 是合理的，因为每个按钮的显示条件是**与当前循环项 `item` 强相关的**。
-        ```html
-        <li v-for="item in items" :key="item.id">
-          {{ item.name }}
-          <button v-if="canEdit(item)">编辑</button>
-          <button v-if="canDelete(item)">删除</button>
-        </li>
-        ```
-        这里的 `canEdit` 和 `canDelete` 是 `methods`，它们接收 `item` 作为参数，并结合用户的角色信息进行复杂的逻辑判断。这展示了 `v-if` 在循环内部的正确、合理的用法。
+# Vue v-if 与 v-for 优先级精华学习资料
 
 ---
 
-### **五、快速上手指南 (给未来的自己)**
+## 日常学习模式
 
-嗨，未来的我！当你需要循环并有条件地渲染时，记住这个简单的决策树：
+**[标签: Vue指令 v-if v-for 优先级 计算属性 性能优化]**
 
-1.  **问题：我是要渲染整个列表，还是只渲染列表的一部分？**
+### 核心原则
 
-    *   **A) 渲染整个列表，但需要一个总开关？**
-        *   **解决方案**: 用 `v-if` 包裹 `v-for`。
-        *   **代码**: `<div v-if="condition"><p v-for="item in items">...</p></div>`
+**永远不要将 v-if 和 v-for 用在同一个元素上**
 
-    *   **B) 渲染列表的一部分（过滤）？**
-        *   **解决方案**: 用 `computed` 属性。这是99%的情况下的最佳答案。
-        *   **代码**:
-            ```javascript
-            // script setup
-            const filteredItems = computed(() => items.value.filter(item => ...));
-            // template
-            // <p v-for="item in filteredItems">...</p>
-            ```
+这是 Vue 官方明确指出的反模式，无论 Vue 2 还是 Vue 3 都应避免。
 
-2.  **绝对禁忌**: **永远、永远不要**把 `v-if` 和 `v-for` 写在同一个HTML标签上。这要么有性能问题（Vue 2），要么直接报错（Vue 3）。遵守上面的决策树，代码自然就清晰、高效了。
+---
 
-[标签: Vue 指令优先级, v-if, v-for, 最佳实践, 计算属性]
+### 优先级演变历史
+
+#### Vue 2.x：v-for 优先级更高
+
+```vue
+<!-- Vue 2 中的执行顺序 -->
+<template>
+  <!-- ❌ 反模式：会先循环1000次，再判断1000次 -->
+  <div 
+    v-for="user in users" 
+    v-if="user.isActive" 
+    :key="user.id"
+  >
+    {{ user.name }}
+  </div>
+</template>
+
+<script>
+/**
+ * Vue 2 执行流程
+ * 1. v-for 先执行：遍历整个 users 数组
+ * 2. v-if 后执行：对每个元素进行判断
+ * 
+ * 问题：即使只有1个活跃用户，也会循环1000次
+ * 造成严重的性能浪费
+ */
+export default {
+  data() {
+    return {
+      users: [/* 1000个用户 */]
+    };
+  }
+};
+</script>
+```
+
+#### Vue 3.x：v-if 优先级更高
+
+```vue
+<!-- Vue 3 中的执行顺序 -->
+<template>
+  <!-- ❌ 错误：会直接报错 -->
+  <div 
+    v-for="user in users" 
+    v-if="user.isActive" 
+    :key="user.id"
+  >
+    {{ user.name }}
+  </div>
+  <!-- 
+    Error: Property "user" was accessed during render 
+    but is not defined on instance.
+  -->
+</template>
+
+<script setup>
+/**
+ * Vue 3 执行流程
+ * 1. v-if 先执行：尝试访问 user.isActive
+ * 2. 此时 v-for 还未执行，user 变量不存在
+ * 3. 抛出编译错误
+ * 
+ * 设计理念：从语法层面阻止错误用法
+ */
+import { ref } from 'vue';
+
+const users = ref([/* ... */]);
+</script>
+```
+
+**为什么改变优先级？**
+
+1. **更符合直觉**：先判断条件，再决定是否循环
+2. **避免逻辑悖论**：从根本上防止在 v-if 中访问 v-for 变量
+3. **KISS 原则**：简化开发者心智模型
+
+---
+
+### 最佳实践模式
+
+#### 模式1：条件性渲染整个列表
+
+**使用场景：** 根据条件决定是否渲染整个列表
+
+```vue
+<template>
+  <!-- ✅ 正确：v-if 在外层容器 -->
+  <div v-if="shouldShowList">
+    <ul v-if="users && users.length > 0">
+      <li v-for="user in users" :key="user.id">
+        {{ user.name }}
+      </li>
+    </ul>
+    <p v-else>暂无用户数据</p>
+  </div>
+
+  <!-- 或使用 template 标签 -->
+  <template v-if="shouldShowList">
+    <ul>
+      <li v-for="user in users" :key="user.id">
+        {{ user.name }}
+      </li>
+    </ul>
+  </template>
+</template>
+
+<script setup>
+import { ref } from 'vue';
+
+/**
+ * 控制整个列表的显示/隐藏
+ */
+const shouldShowList = ref(true);
+const users = ref([
+  { id: 1, name: 'Alice' },
+  { id: 2, name: 'Bob' }
+]);
+</script>
+```
+
+#### 模式2：过滤列表数据（首选方案）
+
+**使用场景：** 只渲染符合条件的列表项
+
+```vue
+<template>
+  <!-- ✅ 最佳实践：循环计算属性 -->
+  <ul>
+    <li v-for="user in activeUsers" :key="user.id">
+      {{ user.name }}
+      <span class="badge">活跃</span>
+    </li>
+  </ul>
+
+  <!-- 如果没有数据 -->
+  <p v-if="activeUsers.length === 0">
+    没有活跃用户
+  </p>
+</template>
+
+<script setup>
+import { ref, computed } from 'vue';
+
+/**
+ * 原始数据：所有用户
+ */
+const allUsers = ref([
+  { id: 1, name: 'Alice', isActive: true },
+  { id: 2, name: 'Bob', isActive: false },
+  { id: 3, name: 'Charlie', isActive: true },
+  { id: 4, name: 'David', isActive: false }
+]);
+
+/**
+ * 计算属性：自动过滤活跃用户
+ * 
+ * 优势：
+ * 1. 单一职责：逻辑与视图分离
+ * 2. 性能优化：结果被缓存，避免重复计算
+ * 3. 可维护性：过滤逻辑集中管理
+ * 4. 可测试性：易于编写单元测试
+ */
+const activeUsers = computed(() => {
+  return allUsers.value.filter(user => user.isActive);
+});
+</script>
+```
+
+---
+
+### 计算属性的核心优势
+
+#### 1. 单一职责原则（SRP）
+
+```vue
+<template>
+  <!-- 模板只负责展示，保持简洁 -->
+  <div class="user-list">
+    <UserCard 
+      v-for="user in filteredUsers" 
+      :key="user.id"
+      :user="user"
+    />
+  </div>
+</template>
+
+<script setup>
+import { ref, computed } from 'vue';
+import UserCard from './UserCard.vue';
+
+const users = ref([/* ... */]);
+const searchText = ref('');
+const selectedRole = ref('all');
+
+/**
+ * 计算属性负责复杂的过滤逻辑
+ * 职责清晰：数据转换与业务逻辑
+ */
+const filteredUsers = computed(() => {
+  let result = users.value;
+
+  // 按角色过滤
+  if (selectedRole.value !== 'all') {
+    result = result.filter(u => u.role === selectedRole.value);
+  }
+
+  // 按搜索词过滤
+  if (searchText.value) {
+    const keyword = searchText.value.toLowerCase();
+    result = result.filter(u => 
+      u.name.toLowerCase().includes(keyword) ||
+      u.email.toLowerCase().includes(keyword)
+    );
+  }
+
+  return result;
+});
+</script>
+```
+
+#### 2. 缓存机制与性能
+
+```javascript
+/**
+ * 计算属性的缓存原理
+ */
+import { ref, computed } from 'vue';
+
+const count = ref(0);
+const items = ref([1, 2, 3, 4, 5]);
+
+/**
+ * 计算属性：只在依赖变化时重新计算
+ */
+const expensiveSum = computed(() => {
+  console.log('计算属性执行了');
+  return items.value.reduce((sum, n) => sum + n * count.value, 0);
+});
+
+// 多次访问，只计算一次
+console.log(expensiveSum.value); // 输出: "计算属性执行了", 0
+console.log(expensiveSum.value); // 直接返回缓存值, 0
+console.log(expensiveSum.value); // 直接返回缓存值, 0
+
+// 依赖改变，重新计算
+count.value = 2;
+console.log(expensiveSum.value); // 输出: "计算属性执行了", 30
+
+/**
+ * 普通方法：每次调用都重新计算
+ */
+const expensiveSumMethod = () => {
+  console.log('方法执行了');
+  return items.value.reduce((sum, n) => sum + n * count.value, 0);
+};
+
+// 每次调用都执行
+console.log(expensiveSumMethod()); // 输出: "方法执行了"
+console.log(expensiveSumMethod()); // 输出: "方法执行了"
+console.log(expensiveSumMethod()); // 输出: "方法执行了"
+```
+
+---
+
+### 实战场景方案
+
+#### 场景1：多条件筛选（电商商品列表）
+
+```vue
+<template>
+  <div class="product-filter">
+    <!-- 筛选条件 -->
+    <div class="filters">
+      <select v-model="filters.category">
+        <option value="">全部分类</option>
+        <option value="electronics">电子产品</option>
+        <option value="clothing">服装</option>
+      </select>
+    
+      <input 
+        v-model="filters.priceRange[0]" 
+        type="number" 
+        placeholder="最低价"
+      >
+      <input 
+        v-model="filters.priceRange[1]" 
+        type="number" 
+        placeholder="最高价"
+      >
+    
+      <input 
+        v-model="filters.keyword" 
+        placeholder="搜索商品"
+      >
+    </div>
+  
+    <!-- 商品列表 -->
+    <div class="product-list">
+      <ProductCard 
+        v-for="product in filteredProducts" 
+        :key="product.id"
+        :product="product"
+      />
+    
+      <p v-if="filteredProducts.length === 0">
+        没有找到符合条件的商品
+      </p>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed } from 'vue';
+import ProductCard from './ProductCard.vue';
+
+/**
+ * 原始商品数据
+ */
+const allProducts = ref([
+  { id: 1, name: '笔记本电脑', category: 'electronics', price: 5999 },
+  { id: 2, name: 'T恤', category: 'clothing', price: 99 },
+  { id: 3, name: '手机', category: 'electronics', price: 3999 },
+  { id: 4, name: '牛仔裤', category: 'clothing', price: 299 }
+]);
+
+/**
+ * 筛选条件
+ */
+const filters = ref({
+  category: '',
+  priceRange: [0, 10000],
+  keyword: ''
+});
+
+/**
+ * 多条件过滤计算属性
+ * 链式调用 filter，逐步缩小范围
+ */
+const filteredProducts = computed(() => {
+  let result = allProducts.value;
+
+  // 分类过滤
+  if (filters.value.category) {
+    result = result.filter(p => p.category === filters.value.category);
+  }
+
+  // 价格区间过滤
+  const [min, max] = filters.value.priceRange;
+  result = result.filter(p => p.price >= min && p.price <= max);
+
+  // 关键词搜索
+  if (filters.value.keyword) {
+    const keyword = filters.value.keyword.toLowerCase();
+    result = result.filter(p => 
+      p.name.toLowerCase().includes(keyword)
+    );
+  }
+
+  return result;
+});
+</script>
+```
+
+#### 场景2：搜索实时过滤
+
+```vue
+<template>
+  <div class="search-list">
+    <!-- 搜索框 -->
+    <input 
+      v-model="searchText"
+      placeholder="搜索用户..."
+      class="search-input"
+    >
+  
+    <!-- 搜索结果 -->
+    <ul class="user-list">
+      <li 
+        v-for="user in searchedUsers" 
+        :key="user.id"
+        class="user-item"
+      >
+        <span class="user-name">{{ user.name }}</span>
+        <span class="user-email">{{ user.email }}</span>
+      </li>
+    </ul>
+  
+    <p v-if="searchedUsers.length === 0 && searchText">
+      没有找到 "{{ searchText }}" 相关的用户
+    </p>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed } from 'vue';
+
+const allUsers = ref([
+  { id: 1, name: '张三', email: 'zhangsan@example.com' },
+  { id: 2, name: '李四', email: 'lisi@example.com' },
+  { id: 3, name: '王五', email: 'wangwu@example.com' }
+]);
+
+/**
+ * 搜索关键词
+ */
+const searchText = ref('');
+
+/**
+ * 搜索结果计算属性
+ * 依赖 searchText，自动响应变化
+ */
+const searchedUsers = computed(() => {
+  if (!searchText.value) {
+    return allUsers.value; // 无搜索词，返回全部
+  }
+
+  const keyword = searchText.value.toLowerCase();
+  return allUsers.value.filter(user => 
+    user.name.toLowerCase().includes(keyword) ||
+    user.email.toLowerCase().includes(keyword)
+  );
+});
+</script>
+```
+
+#### 场景3：权限过滤列表
+
+```vue
+<template>
+  <div class="user-management">
+    <h2>用户列表</h2>
+  
+    <!-- 当前用户只能看到权限低于自己的用户 -->
+    <table>
+      <thead>
+        <tr>
+          <th>姓名</th>
+          <th>权限等级</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="user in visibleUsers" :key="user.id">
+          <td>{{ user.name }}</td>
+          <td>{{ user.level }}</td>
+          <td>
+            <!-- 每行的操作按钮也可以有独立判断 -->
+            <button v-if="canEdit(user)">编辑</button>
+            <button v-if="canDelete(user)">删除</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed } from 'vue';
+
+/**
+ * 当前登录用户信息
+ */
+const currentUser = ref({
+  id: 1,
+  name: '管理员',
+  level: 3 // 权限等级：1=普通, 2=主管, 3=管理员
+});
+
+/**
+ * 所有用户列表
+ */
+const allUsers = ref([
+  { id: 2, name: '张三', level: 1 },
+  { id: 3, name: '李四', level: 2 },
+  { id: 4, name: '王五', level: 1 },
+  { id: 5, name: '赵六', level: 3 }
+]);
+
+/**
+ * 可见用户列表
+ * 只显示权限等级 <= 当前用户的其他用户
+ */
+const visibleUsers = computed(() => {
+  return allUsers.value.filter(user => 
+    user.level <= currentUser.value.level &&
+    user.id !== currentUser.value.id // 排除自己
+  );
+});
+
+/**
+ * 权限判断方法
+ * 这是 v-if 在循环内部的合理用法
+ */
+const canEdit = (user) => {
+  return user.level < currentUser.value.level;
+};
+
+const canDelete = (user) => {
+  return user.level < currentUser.value.level;
+};
+</script>
+```
+
+#### 场景4：前端分页
+
+```vue
+<template>
+  <div class="paginated-list">
+    <!-- 数据列表 -->
+    <ul>
+      <li v-for="item in paginatedData" :key="item.id">
+        {{ item.name }}
+      </li>
+    </ul>
+  
+    <!-- 分页器 -->
+    <div class="pagination">
+      <button 
+        @click="currentPage--" 
+        :disabled="currentPage === 1"
+      >
+        上一页
+      </button>
+    
+      <span>第 {{ currentPage }} / {{ totalPages }} 页</span>
+    
+      <button 
+        @click="currentPage++" 
+        :disabled="currentPage === totalPages"
+      >
+        下一页
+      </button>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed } from 'vue';
+
+/**
+ * 全部数据（假设100条）
+ */
+const allData = ref(
+  Array.from({ length: 100 }, (_, i) => ({
+    id: i + 1,
+    name: `Item ${i + 1}`
+  }))
+);
+
+/**
+ * 分页参数
+ */
+const currentPage = ref(1);
+const pageSize = ref(10);
+
+/**
+ * 总页数
+ */
+const totalPages = computed(() => 
+  Math.ceil(allData.value.length / pageSize.value)
+);
+
+/**
+ * 当前页数据
+ * 使用 slice 截取数组片段
+ */
+const paginatedData = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value;
+  const end = start + pageSize.value;
+  return allData.value.slice(start, end);
+});
+</script>
+```
+
+---
+
+### v-if 在循环内的合理用法
+
+**场景：** 每个列表项有独立的条件判断
+
+```vue
+<template>
+  <ul>
+    <li v-for="item in items" :key="item.id">
+      <span>{{ item.name }}</span>
+    
+      <!-- ✅ 合理：基于当前项的状态判断 -->
+      <button v-if="item.canEdit">编辑</button>
+      <button v-if="item.canDelete">删除</button>
+      <span v-if="item.isNew" class="badge">新</span>
+    
+      <!-- ✅ 合理：调用方法判断权限 -->
+      <button v-if="hasPermission(item, 'approve')">审核</button>
+    </li>
+  </ul>
+</template>
+
+<script setup>
+import { ref } from 'vue';
+
+const items = ref([
+  { id: 1, name: 'Item 1', canEdit: true, canDelete: false, isNew: true },
+  { id: 2, name: 'Item 2', canEdit: false, canDelete: true, isNew: false }
+]);
+
+/**
+ * 复杂权限判断方法
+ * 接收 item 参数，结合用户角色判断
+ */
+const hasPermission = (item, action) => {
+  // 复杂的权限逻辑...
+  return true;
+};
+</script>
+```
+
+---
+
+### 性能优化进阶
+
+#### 防抖优化搜索
+
+```vue
+<template>
+  <input 
+    v-model="searchText"
+    placeholder="搜索..."
+    @input="debouncedSearch"
+  >
+
+  <ul>
+    <li v-for="item in searchResults" :key="item.id">
+      {{ item.name }}
+    </li>
+  </ul>
+</template>
+
+<script setup>
+import { ref, computed } from 'vue';
+import { useDebounceFn } from '@vueuse/core';
+
+const allItems = ref([/* 大量数据 */]);
+const searchText = ref('');
+const debouncedSearchText = ref('');
+
+/**
+ * 防抖搜索函数
+ * 用户停止输入300ms后才执行搜索
+ */
+const debouncedSearch = useDebounceFn(() => {
+  debouncedSearchText.value = searchText.value;
+}, 300);
+
+/**
+ * 搜索结果依赖防抖后的值
+ * 减少不必要的计算
+ */
+const searchResults = computed(() => {
+  if (!debouncedSearchText.value) return allItems.value;
+
+  const keyword = debouncedSearchText.value.toLowerCase();
+  return allItems.value.filter(item => 
+    item.name.toLowerCase().includes(keyword)
+  );
+});
+</script>
+```
+
+#### 虚拟列表处理大数据
+
+```vue
+<template>
+  <div 
+    ref="containerRef"
+    class="virtual-list"
+    @scroll="handleScroll"
+  >
+    <!-- 占位容器 -->
+    <div :style="{ height: totalHeight + 'px' }"></div>
+  
+    <!-- 可见元素 -->
+    <div 
+      class="visible-items"
+      :style="{ transform: `translateY(${offsetY}px)` }"
+    >
+      <div 
+        v-for="item in visibleItems" 
+        :key="item.id"
+        class="list-item"
+      >
+        {{ item.name }}
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed, onMounted } from 'vue';
+
+/**
+ * 虚拟列表：只渲染可见区域
+ * 适用于超大列表（10000+ 条）
+ */
+const props = defineProps({
+  items: Array,
+  itemHeight: { type: Number, default: 50 }
+});
+
+const containerRef = ref(null);
+const scrollTop = ref(0);
+const containerHeight = ref(0);
+
+// 总高度
+const totalHeight = computed(() => 
+  props.items.length * props.itemHeight
+);
+
+// 可见区域起始索引
+const startIndex = computed(() => 
+  Math.floor(scrollTop.value / props.itemHeight)
+);
+
+// 可见数量
+const visibleCount = computed(() => 
+  Math.ceil(containerHeight.value / props.itemHeight) + 1
+);
+
+// 可见数据
+const visibleItems = computed(() => 
+  props.items.slice(
+    startIndex.value,
+    startIndex.value + visibleCount.value
+  )
+);
+
+// 偏移量
+const offsetY = computed(() => 
+  startIndex.value * props.itemHeight
+);
+
+const handleScroll = (e) => {
+  scrollTop.value = e.target.scrollTop;
+};
+
+onMounted(() => {
+  containerHeight.value = containerRef.value.clientHeight;
+});
+</script>
+```
+
+---
+
+### 关键要点
+
+1. **禁忌**：永远不要在同一元素上同时使用 v-if 和 v-for
+2. **Vue 2**：v-for 优先，导致性能浪费
+3. **Vue 3**：v-if 优先，无法访问循环变量会报错
+4. **最佳实践**：使用计算属性过滤数据
+5. **计算属性优势**：单一职责、缓存优化、可维护性强
+6. **合理用法**：v-if 基于当前循环项的判断可以放在循环内
+7. **性能优化**：大数据场景使用防抖和虚拟列表
+
+---
+
+## 面试突击模式
+
+### [v-if 与 v-for 优先级] 面试速记
+
+#### 30秒电梯演讲
+
+**Vue 2 中 v-for 优先级更高，导致先循环再判断，造成性能浪费。Vue 3 改为 v-if 优先，从语法层面阻止错误用法。官方强烈建议永远不要在同一元素上同时使用两者。正确做法：用 v-if 包裹外层容器，或用计算属性预先过滤数据。计算属性遵循单一职责原则，带缓存优化，是最佳实践。**
+
+---
+
+### 高频考点（必背）
+
+**考点1：Vue 2 和 Vue 3 优先级差异**
+Vue 2 中 v-for 优先级更高，先执行循环再判断条件，性能低下。Vue 3 中 v-if 优先级更高，先判断条件但此时循环变量未定义会报错。两个版本都不应该在同一元素上混用。
+
+**考点2：为什么不能混用**
+Vue 2：会遍历整个数组再逐项判断，即使只渲染少数元素也要循环全部数据，浪费性能。Vue 3：v-if 先执行时无法访问 v-for 的循环变量，直接编译报错。两者都违反最佳实践。
+
+**考点3：计算属性的三大优势**
+1)单一职责：视图专注展示，逻辑封装在计算属性 2)缓存机制：只在依赖变化时重新计算，多次访问返回缓存值 3)可维护性：过滤逻辑集中管理，易于测试和复用。
+
+**考点4：两种正确模式**
+模式1：v-if 包裹整个列表容器，用于控制列表整体显示/隐藏。模式2（首选）：用计算属性过滤原始数据，模板中直接循环过滤后的结果。绝大多数场景用模式2。
+
+**考点5：v-if 在循环内的合理用法**
+当判断条件依赖当前循环项的属性时，v-if 可以放在循环内部。例如每行数据有独立的操作权限判断：`v-if="item.canEdit"` 或 `v-if="hasPermission(item)"`。这是基于业务逻辑的必要判断，非反模式。
+
+---
+
+### 经典面试题
+
+#### 题目1：解释下面代码在 Vue 2 和 Vue 3 中的不同表现
+
+```vue
+<template>
+  <div v-for="user in users" v-if="user.isActive" :key="user.id">
+    {{ user.name }}
+  </div>
+</template>
+```
+
+**思路:**
+1. 识别指令混用问题
+2. 分别说明两个版本的执行顺序
+3. 指出各自的问题
+
+**答案:**
+Vue 2：v-for 优先级更高，先循环整个 users 数组，然后对每个 user 进行 v-if 判断。即使只有1个活跃用户，也会遍历全部数据并执行多次条件判断，造成严重性能浪费。
+
+Vue 3：v-if 优先级更高，会先尝试执行 `user.isActive` 判断。但此时 v-for 还未执行，user 变量不存在，会抛出编译错误："Property 'user' was accessed during render but is not defined on instance"。
+
+两个版本都证明了这是错误写法，应该避免。
+
+**代码框架:**
+```vue
+<!-- ❌ 错误写法 -->
+<div v-for="user in users" v-if="user.isActive" :key="user.id">
+  {{ user.name }}
+</div>
+
+<!-- ✅ 正确写法1：外层包裹 -->
+<template v-if="users.length > 0">
+  <div v-for="user in activeUsers" :key="user.id">
+    {{ user.name }}
+  </div>
+</template>
+
+<!-- ✅ 正确写法2：计算属性（推荐） -->
+<script setup>
+import { ref, computed } from 'vue';
+
+const users = ref([
+  { id: 1, name: 'Alice', isActive: true },
+  { id: 2, name: 'Bob', isActive: false }
+]);
+
+/**
+ * 用计算属性预先过滤
+ * 模板只负责展示
+ */
+const activeUsers = computed(() => 
+  users.value.filter(u => u.isActive)
+);
+</script>
+
+<template>
+  <div v-for="user in activeUsers" :key="user.id">
+    {{ user.name }}
+  </div>
+</template>
+```
+
+---

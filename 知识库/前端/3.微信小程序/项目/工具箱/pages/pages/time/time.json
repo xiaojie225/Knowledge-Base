@@ -1,8 +1,0 @@
-{
-    "usingComponents": {},
-    "navigationBarBackgroundColor": "#ff4444",
-    "navigationBarTextStyle": "white",
-    "backgroundTextStyle": "dark",
-    "enablePullDownRefresh": true,
-    "navigationBarTitleText": "时光荏苒"
-}
