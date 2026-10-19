@@ -674,7 +674,7 @@ const ws = new WebSocket('ws://api.example.com/permission-updates')
 ws.onmessage = (event) => {
   const { userId, action } = JSON.parse(event.data)
 
-  const userStore = useUserStore()
+  const userscript setupStore = useUserStore()
   if (userId === userStore.userId && action === 'permission-changed') {
     const permissionStore = usePermissionStore()
     permissionStore.refreshPermissions()
@@ -698,39 +698,7 @@ setInterval(async () => {
 }, 5 * 60 * 1000)
 ```
 
-**Q: 如何实现"权限预加载"，避免用户点击后才发现无权限？**
-A:
-1. **路由元信息标注**：
-```javascript
-{
-  path: '/user/create',
-  meta: { 
-    permission: 'user:create',
-    hideInMenu: !hasPermission('user:create') // 菜单中隐藏
-  }
-}
-```
 
-2. **自定义指令**：
-```javascript
-// directives/permission.js
-export default {
-  mounted(el, binding) {
-    const { value } = binding
-    const permissionStore = usePermissionStore()
-  
-    if (!permissionStore.hasPermission(value)) {
-      el.style.display = 'none'
-      // 或者添加disabled属性
-      el.setAttribute('disabled', 'true')
-      el.classList.add('is-disabled')
-    }
-  }
-}
-
-// 使用
-<button v-permission="'user:delete'">删除</button>
-```
 
 **Q: 如何防止前端权限被绕过（安全性考虑）？**
 A:
@@ -796,22 +764,10 @@ A:
 2. **Provide / Inject**
    - 适用：跨层级传递数据
    - 缺点：数据流向不明确，难以追踪；没有响应式保证（需手动包装ref）；不支持TypeScript类型推断
-
 3. **EventBus (事件总线)**
-   ```javascript
-   // eventBus.js
-   import mitt from 'mitt'
-   export const bus = mitt()
- 
-   // 发送
-   bus.emit('update', data)
-   // 接收
-   bus.on('update', handler)
-   ```
-   - 缺点：事件泛滥难以管理；容易内存泄漏（忘记off）；无法做时间旅行调试
 
 4. **Vuex**
-   - 缺点：样板代码多（mutations必须同步）；TypeScript支持差；模块化需要namespace
+
 
 **Q: Pinia和provide/inject的区别是什么？**
 
@@ -834,7 +790,6 @@ A:
 3. **模块化天生支持**: 不需要modules和namespaced配置
 4. **体积更小**: 压缩后约1KB（Vuex约2KB）
 5. **更好的代码分割**: 每个store是独立的
-6. **与Composition API协同**: Setup Store写法与<script setup>一致
 
 ---
 
