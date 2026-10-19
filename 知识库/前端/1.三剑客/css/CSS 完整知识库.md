@@ -1,38 +1,4 @@
-# CSS 完整知识库 - 日常学习版
-
-##  知识地图
-
-```
-CSS知识体系
-├─ 基础语法
-│  ├─ 选择器系统（优先级、伪类、伪元素）
-│  ├─ 层叠与继承机制
-│  └─ CSS变量
-├─ 盒模型与布局
-│  ├─ 盒模型（标准/IE、BFC）
-│  ├─ Flexbox（一维布局）
-│  ├─ Grid（二维布局）
-│  └─ 定位系统（relative/absolute/fixed/sticky）
-├─ 视觉效果
-│  ├─ 边框与圆角
-│  ├─ 阴影（box-shadow、text-shadow）
-│  ├─ 渐变（线性、径向）
-│  └─ 滤镜（filter、backdrop-filter）
-├─ 变换与动画
-│  ├─ Transform（2D/3D变换）
-│  ├─ Transition（过渡）
-│  └─ Animation（关键帧动画）
-├─ 响应式设计
-│  ├─ 媒体查询
-│  ├─ 单位系统（px/em/rem/vw/vh）
-│  └─ 移动端适配方案
-└─ 高级特性
-   ├─ 混合模式（blend-mode）
-   ├─ 裁剪路径（clip-path）
-   └─ 性能优化原理
-```
-
----
+# CSS 完整知识库 
 
 ## 第一部分：基础语法核心
 
@@ -52,18 +18,11 @@ div#content            /* 1+100 = 101 */
 
 #### 属性选择器精确匹配
 ```css
-[attr^="value"]  /* 以...开头 */
-[attr$="value"]  /* 以...结尾 */
-[attr*="value"]  /* 包含... */
+[attr^="value"]  /* 以...开头 */ a[href^="https"]{color: green;} 
+[attr$="value"]  /* 以...结尾 */ a[href$=".com"]{color: red;}
+[attr*="value"]  /* 包含... */ a[href*="example"]{color: blue;}
 ```
 
-**实战案例**：
-```css
-/* 外部链接添加图标 */
-a[href^="https"] { 
-  color: green; 
-}
-```
 
 #### 伪类核心用法
 ```css
@@ -178,25 +137,6 @@ box-sizing: border-box;
 }
 ```
 
-#### Margin塌陷现象
-**发生场景**：
-1. 父子元素的margin-top
-2. 相邻兄弟元素的margin
-3. 空元素的margin-top和margin-bottom
-
-**解决方案**：
-```css
-/* 方案1：触发BFC */
-.parent { overflow: hidden; }
-
-/* 方案2：Flexbox（推荐）*/
-.container {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;  /* 明确间距 */
-}
-```
-
 ---
 
 ### 2.2 BFC（块级格式化上下文）
@@ -227,16 +167,16 @@ display: flow-root;  /* 现代方案，专门创建BFC */
 .container {
   display: flex;
 
-  /* 主轴方向 */
-  flex-direction: row | column;
+  /* 主轴方向 row是水平，column是垂直 */
+  flex-direction: row | column; 
 
-  /* 换行 */
+  /* 换行 nowrap是不换行，wrap是换行 */
   flex-wrap: nowrap | wrap;
 
-  /* 主轴对齐 */
+  /* 主轴对齐 flex-start是左对齐，flex-end是右对齐，center是居中对齐，space-between是平均分布对齐 */
   justify-content: flex-start | center | space-between;
 
-  /* 交叉轴对齐 */
+  /* 交叉轴对齐 stretch是拉伸对齐，center是居中对齐，flex-start是左对齐，flex-end是右对齐 */
   align-items: stretch | center | flex-start;
 
   /* 间距（推荐）*/
@@ -247,11 +187,14 @@ display: flow-root;  /* 现代方案，专门创建BFC */
 #### 项目属性核心
 ```css
 .item {
-  /* flex简写：grow shrink basis */
-  flex: 1;  /* 等于 1 1 0% */
+  /* flex简写：grow shrink basis  1是放大比例，0是缩小比例，200px是初始尺寸 */
+  flex: 1; 
 
   flex-grow: 1;      /* 放大比例（默认0不放大）*/
-  flex-shrink: 0;    /* 缩小比例（默认1会缩小）*/
+  flex-shrink: 0;    /* 即使空间不足，也不会缩小 */
+/* flex-shrink: 1 - 默认值，元素可收缩 */
+/* flex-shrink: 2 - 收缩比例为 2 */
+ 
   flex-basis: 200px; /* 初始尺寸 */
 
   /* 单独对齐 */
@@ -265,14 +208,6 @@ flex: 1;     /* 等于 1 1 0% - 不考虑内容宽度 */
 flex: auto;  /* 等于 1 1 auto - 基于内容宽度分配 */
 ```
 
-#### 水平垂直居中
-```css
-.container {
-  display: flex;
-  justify-content: center;  /* 水平 */
-  align-items: center;      /* 垂直 */
-}
-```
 
 ---
 
@@ -286,7 +221,7 @@ flex: auto;  /* 等于 1 1 auto - 基于内容宽度分配 */
   /* 定义列 */
   grid-template-columns: 200px 1fr 200px;  /* 固定-自适应-固定 */
   grid-template-columns: repeat(3, 1fr);   /* 三等分 */
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));  /* 响应式 */
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));  /* 无需媒体查询 响应式 */
 
   /* 间距 */
   gap: 20px;
@@ -308,17 +243,6 @@ flex: auto;  /* 等于 1 1 auto - 基于内容宽度分配 */
   /* 跨行 */
   grid-row: 1 / 3;
 }
-```
-
-#### 响应式自适应布局
-```css
-.container {
-  display: grid;
-  /* 自动填充，最小200px，最大1fr */
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
-}
-/* 无需媒体查询，自动响应！ */
 ```
 
 #### Flex vs Grid 选择指南
@@ -370,11 +294,9 @@ position: sticky;    /* 粘性定位，滚动到阈值后固定 */
 /* 圆角 */
 border-radius: 10px;                 /* 四角 */
 border-radius: 50%;                  /* 圆形 */
-
-/* 多重边框（利用阴影）*/
-box-shadow: 0 0 0 5px red, 0 0 0 10px blue;
+border-top-left-radius: 40px;     /* 左上角角径 */
+border-top-right-radius: 40px;    /* 右上角角径 */
 ```
-
 ---
 
 ### 3.2 阴影效果 
@@ -382,6 +304,7 @@ box-shadow: 0 0 0 5px red, 0 0 0 10px blue;
 ```css
 /* 盒阴影 */
 box-shadow: h-offset v-offset blur spread color inset;
+/*第1个是水平偏移 第2个是垂直偏移 第3个是模糊半径 第4个是扩展半径 第5个是颜色 rgba(红,绿,蓝,透明度) */
 box-shadow: 2px 2px 5px rgba(0,0,0,0.3);     /* 基础 */
 box-shadow: 0 10px 30px rgba(0,0,0,0.2);     /* 悬浮 */
 box-shadow: inset 0 0 10px rgba(0,0,0,0.5);  /* 内阴影 */
@@ -396,12 +319,19 @@ text-shadow: 0 0 10px #fff;  /* 发光效果 */
 ### 3.3 渐变 
 
 ```css
-/* 线性渐变 */
+/* 线性渐变 从右到左，红色到蓝色，50%黄色到100%蓝色，100%透明 */
 background: linear-gradient(to right, red, blue);
+/* degree 角度 45度 */
 background: linear-gradient(45deg, red 0%, yellow 50%, blue 100%);
 
-/* 径向渐变 */
+/* 径向渐变 conic是圆形 */
 background: radial-gradient(circle, red, blue);
+
+/* 对角线渐变 */
+background: linear-gradient(to bottom right, #FF6B4A, #FF8F6B);
+
+/* 多色渐变 */
+background: linear-gradient(to right, #FF6B4A, #FF8F6B, #FFA07A);
 
 /* 重复渐变（条纹背景）*/
 background: repeating-linear-gradient(
@@ -411,6 +341,9 @@ background: repeating-linear-gradient(
   #e0e0e0 50px,
   #e0e0e0 100px
 );
+
+/* 背景图片相对于视口固定，页面滚动时背景图不会随之滚动。*/
+background-attachment: fixed 
 ```
 
 ---
@@ -444,9 +377,9 @@ transform: skew(10deg, 20deg);      /* 倾斜 */
 
 #### 3D变换
 ```css
-transform: translateZ(50px);
-transform: rotateX(45deg) rotateY(45deg);
-transform: perspective(500px) rotateY(45deg);  /* 透视 */
+transform: translateZ(50px);        /* 位移 Z轴 */
+transform: rotateX(45deg) rotateY(45deg); /* 旋转 X轴 Y轴 */
+transform: perspective(500px) rotateY(45deg);  /* 透视 Y轴 45度 */
 
 /* 3D翻转卡片 */
 .card {
@@ -463,10 +396,10 @@ transform: perspective(500px) rotateY(45deg);  /* 透视 */
 ### 4.2 Transition过渡 
 
 ```css
-/* 完整语法 */
+/* 完整语法 property是属性名 duration是时间间隔 timing-function是时间函数, delay是延迟时间 */
 transition: property duration timing-function delay;
 
-/* 示例 */
+/* 示例 所有属性 3秒  ease-in-out 0延迟 */
 transition: all 0.3s ease-in-out;
 
 /* 时间函数 */
@@ -475,17 +408,6 @@ linear        /* 匀速 */
 ease-in       /* 慢-快 */
 ease-out      /* 快-慢 */
 cubic-bezier(0.42, 0, 0.58, 1)  /* 自定义 */
-```
-
-**按钮悬停效果**：
-```css
-.button {
-  transition: background 0.3s, transform 0.2s;
-}
-.button:hover {
-  background: darkblue;
-  transform: scale(1.05);
-}
 ```
 
 ---
@@ -505,24 +427,14 @@ cubic-bezier(0.42, 0, 0.58, 1)  /* 自定义 */
 }
 
 /* 完整属性 */
-animation-name: slidein;
-animation-duration: 2s;
-animation-timing-function: ease;
-animation-delay: 1s;
+animation-name: slidein;             /* 动画名称 */
+animation-duration: 2s;             /* 动画时间 */
+animation-timing-function: ease;     /* 时间函数 */
+animation-delay: 1s;                 /* 延迟时间 */
 animation-iteration-count: infinite;  /* 或次数 */
 animation-direction: alternate;       /* 往返 */
 animation-fill-mode: forwards;        /* 保持结束状态 */
 animation-play-state: paused;         /* 暂停 */
-```
-
-**Loading旋转动画**：
-```css
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-.loader {
-  animation: spin 1s linear infinite;
-}
 ```
 
 ---
@@ -623,13 +535,6 @@ window.addEventListener('resize', setRem);
 
 ## 第六部分：高级特性
 
-### 6.1 混合模式 
-
-```css
-background-blend-mode: multiply;  /* 正片叠底 */
-mix-blend-mode: difference;       /* 差值 */
-```
-
 ---
 
 ### 6.2 裁剪路径 
@@ -675,22 +580,12 @@ width, height, margin, padding, left, top
 }
 ```
 
-#### Will-change提前优化
-```css
-.element {
-  will-change: transform;  /* 动画前添加 */
-}
-
-.element.done {
-  will-change: auto;  /* 动画后移除 */
-}
-```
 
 ---
 
-## 第七部分：实用技巧
+## 第七部分：实用技巧（核心代码模板（直接背诵））
 
-### 7.1 水平垂直居中（5种方法） 
+### 水平垂直居中（5种方法） 
 
 ```css
 /* 方法1：Flex（推荐）*/
@@ -733,14 +628,14 @@ width, height, margin, padding, left, top
 
 ---
 
-### 7.2 文本溢出省略 
+### 文本溢出省略 
 
 ```css
 /* 单行省略 */
 .ellipsis-single {
   overflow: hidden;
   white-space: nowrap;
-  text-overflow: ellipsis;
+  text-overflow: ellipsis; /*显示省略号*/
 }
 
 /* 多行省略（Webkit）*/
@@ -752,702 +647,7 @@ width, height, margin, padding, left, top
 }
 ```
 
----
-
-### 7.3 固定宽高比容器 
-
-```css
-/* 方法1：padding-top百分比 */
-.ratio-box {
-  position: relative;
-  width: 100%;
-  padding-top: 56.25%;  /* 16:9 */
-}
-
-.ratio-box-content {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-}
-
-/* 方法2：aspect-ratio（现代）*/
-.ratio-box {
-  width: 100%;
-  aspect-ratio: 16 / 9;
-}
-```
-
----
-
-### 7.4 纯CSS三角形 
-
-```css
-/* 原理：利用border交界处是斜线 */
-.triangle-up {
-  width: 0;
-  height: 0;
-  border-left: 50px solid transparent;
-  border-right: 50px solid transparent;
-  border-bottom: 100px solid red;
-}
-```
-
----
-
-### 7.5 文字渐变色 
-
-```css
-.gradient-text {
-  background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: transparent;  /* 回退 */
-}
-```
-
----
-
-##  核心记忆口诀
-
-```
-【选择器】ID百类十标签一
-【盒模型】IE盒子更好用（border-box）
-【布局】Flex一维Grid二维
-【动画】transform + opacity性能好
-【响应式】rem全局em组件
-【优化】避免重排用transform
-```
-
-
-
-# CSS 面试突击速记宝典
-
-> ⚡ **30分钟速记** | **高频考点100%覆盖** | **经典题型精选** | **代码模板即用**
-
----
-
-##  30秒电梯演讲
-
-**面试官问："简单介绍一下CSS"**
-
-**标准回答（背诵版）**：
-```
-CSS是层叠样式表，用于控制网页视觉呈现。
-核心机制包括：
-1. 选择器系统（优先级计算）
-2. 盒模型（标准/IE、BFC）
-3. 布局系统（Flexbox一维、Grid二维）
-4. 视觉效果（圆角、阴影、渐变）
-5. 动画系统（transform、transition、animation）
-6. 响应式设计（媒体查询、rem/vw单位）
-
-CSS3采用模块化设计，新增硬件加速、GPU渲染等性能优化。
-```
-
----
-
-## ⭐ 高频考点（必背）
-
-### 考点1：CSS选择器优先级如何计算？⭐⭐⭐
-**出现频率**：极高
-
-**核心答案（3句话）**：
-1. **计算公式**：`!important > 内联(1000) > ID(100) > 类/属性/伪类(10) > 标签/伪元素(1)`
-2. **同级比较**：权重相同时，后定义的覆盖先定义的（层叠性）
-3. **特殊情况**：`!important`最高但应避免滥用
-
-**代码示例**：
-```css
-/* 权重：100+10+1 = 111 */
-#nav .list li { color: red; }
-
-/* 权重：10+10+1 = 21 */
-.header .nav li { color: blue; }
-
-/* red生效（111 > 21）*/
-```
-
----
-
-### 考点2：盒模型有哪两种？区别是什么？⭐⭐⭐
-**出现频率**：极高
-
-**核心答案**：
-```
-【标准盒模型】box-sizing: content-box（默认）
-总宽度 = width + padding + border
-
-【IE盒模型】box-sizing: border-box（推荐）
-总宽度 = width（包含padding和border）
-
-推荐全局设置：
-*, *::before, *::after { box-sizing: border-box; }
-```
-
----
-
-### 考点3：什么是BFC？如何触发？作用是什么？⭐⭐⭐
-**出现频率**：极高
-
-**标准答案模板（是什么→触发条件→作用）**：
-```
-【是什么】
-BFC（块级格式化上下文）是一个独立的渲染区域，
-内部元素的布局不影响外部元素。
-
-【如何触发】
-overflow: hidden/auto/scroll（最常用）
-display: flex/grid/inline-block
-position: absolute/fixed
-float: left/right
-display: flow-root（现代方案）
-
-【作用】
-1. 解决margin塌陷
-2. 清除浮动（解决高度塌陷）
-3. 防止文字环绕
-```
-
----
-
-### 考点4：Flex布局中`flex: 1`是什么意思？⭐⭐⭐
-**出现频率**：极高
-
-**核心答案**：
-```css
-flex: 1;  /* 是以下三个属性的简写 */
-
-/* 完整展开 */
-flex-grow: 1;      /* 放大比例：占据剩余空间 */
-flex-shrink: 1;    /* 缩小比例：空间不足时收缩 */
-flex-basis: 0%;    /* 初始尺寸：不考虑内容宽度 */
-
-/* 对比 */
-flex: 1;     /* = 1 1 0% - 平均分配空间 */
-flex: auto;  /* = 1 1 auto - 基于内容宽度分配 */
-```
-
----
-
-### 考点5：Flexbox和Grid的区别？如何选择？⭐⭐⭐
-**出现频率**：高
-
-**快速对比表**：
-
-| 维度 | Flexbox | Grid |
-|------|---------|------|
-| 布局类型 | 一维（行或列）| 二维（行和列）|
-| 适用场景 | 导航栏、列表、组件内部 | 页面整体布局 |
-| 学习难度 | 简单 | 稍复杂 |
-
-**选择口诀**：
-```
-组件内部 → Flexbox
-页面布局 → Grid
-不确定项目数量 → Flexbox
-精确二维控制 → Grid
-```
-
----
-
-### 考点6：`position`有哪些值？区别是什么？⭐⭐⭐
-**出现频率**：高
-
-**核心答案**：
-```css
-static    /* 默认，正常文档流 */
-relative  /* 相对自身原始位置偏移，占据原空间 */
-absolute  /* 相对最近非static祖先，脱离文档流 */
-fixed     /* 相对视口固定，脱离文档流 */
-sticky    /* 粘性定位，滚动到阈值后固定 */
-```
-
-**经典组合：父相子绝**
-```css
-.parent { position: relative; }
-.child { position: absolute; top: 0; right: 0; }
-```
-
----
-
-### 考点7：如何实现水平垂直居中？⭐⭐⭐
-**出现频率**：极高
-
-**必背3种方法**：
-```css
-/* 方法1：Flex（推荐，现代项目首选）*/
-.container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-/* 方法2：Grid */
-.container {
-  display: grid;
-  place-items: center;
-}
-
-/* 方法3：绝对定位 + transform（兼容老浏览器）*/
-.child {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-}
-```
-
----
-
-### 考点8：重排（Reflow）和重绘（Repaint）的区别？⭐⭐⭐
-**出现频率**：高
-
-**核心答案（3句话）**：
-```
-1. 重排：元素几何属性变化（位置、尺寸），触发整个渲染树重新计算，性能开销大
-2. 重绘：元素外观变化（颜色、背景），不影响布局，性能开销小
-3. 关系：重排一定引起重绘，重绘不一定引起重排
-
-【避免方案】
-使用transform代替left/top
-使用opacity代替visibility
-合并样式修改（cssText）
-```
-
----
-
-### 考点9：CSS动画性能优化原则？⭐⭐⭐
-**出现频率**：高
-
-**核心答案（必背）**：
-```
-【黄金原则】只对以下属性做动画
-
-✅ transform（translate、rotate、scale）
-✅ opacity
-
-❌ width、height、margin、padding、left、top
-
-【原因】
-transform和opacity只触发合成（Composite），走GPU加速
-其他属性触发重排（Reflow）或重绘（Repaint），走CPU，性能差
-
-【代码对比】
-❌ animation: left 1s;  /* 每帧重排，卡顿 */
-✅ animation: translateX 1s;  /* GPU加速，流畅 */
-```
-
----
-
-### 考点10：伪类和伪元素的区别？⭐⭐⭐
-**出现频率**：中
-
-**核心答案（3句话）**：
-```
-1. 伪类：选择处于特定状态的元素（如:hover），用单冒号
-2. 伪元素：创建不存在于DOM的元素（如::before），用双冒号
-3. 本质区别：伪类是"筛选条件"，伪元素是"创建内容"
-
-【代码示例】
-a:hover { }        /* 伪类：悬停状态的链接 */
-p::before { }      /* 伪元素：在p前插入内容 */
-```
-
----
-
-### 考点11：媒体查询的常用断点？⭐⭐
-**出现频率**：中
-
-**移动优先断点（必背）**：
-```css
-/* 基础样式（手机，< 576px）*/
-.container { width: 100%; }
-
-/* 小型设备（≥ 576px）*/
-@media (min-width: 576px) { }
-
-/* 平板（≥ 768px）*/
-@media (min-width: 768px) { }
-
-/* 桌面（≥ 1024px）*/
-@media (min-width: 1024px) { }
-
-/* 大屏（≥ 1200px）*/
-@media (min-width: 1200px) { }
-```
-
----
-
-### 考点12：em和rem的区别？⭐⭐
-**出现频率**：中
-
-**快速对比**：
-
-| 特性  | em           | rem          |
-| --- | ------------ | ------------ |
-| 参照  | 父元素font-size | 根元素font-size |
-| 嵌套  | 会累积计算        | 不受影响         |
-| 用途  | 组件内部相对尺寸     | 全局统一布局       |
-
-**使用建议**：
-```css
-/* rem用于布局 */
-.container { max-width: 75rem; }
-
-/* em用于组件内部 */
-.button {
-  font-size: 1rem;
-  padding: 0.5em 1em;  /* 相对按钮自身字体 */
-}
-```
-
----
-
-### 考点13：如何实现响应式字体？⭐⭐
-**出现频率**：中
-
-**现代方案（必背）**：
-```css
-/* 使用clamp()函数 */
-.title {
-  font-size: clamp(1.5rem, 4vw, 3rem);
-  /* 最小1.5rem，理想4vw，最大3rem */
-}
-
-/* 传统方案 */
-html { font-size: 16px; }
-@media (max-width: 768px) {
-  html { font-size: 14px; }
-}
-```
-
----
-
-### 考点14：CSS变量如何使用？⭐⭐
-**出现频率**：中
-
-**核心用法**：
-```css
-/* 定义 */
-:root {
-  --primary-color: #3498db;
-}
-
-/* 使用 */
-.button {
-  background: var(--primary-color);
-  /* 带默认值 */
-  color: var(--text-color, #333);
-}
-
-/* JavaScript操作 */
-document.documentElement.style
-  .setProperty('--primary-color', 'red');
-```
-
----
-
-### 考点15：`:nth-child()`和`:nth-of-type()`的区别？⭐⭐
-**出现频率**：中
-
-**实例对比**：
-```html
-<div>
-  <p>段落1</p>
-  <span>文本</span>
-  <p>段落2</p>
-</div>
-```
-
-```css
-/* :nth-child(2) - 父元素的第2个子元素 */
-p:nth-child(2) { }  /* ❌ 不匹配（第2个是span）*/
-
-/* :nth-of-type(2) - 第2个p元素 */
-p:nth-of-type(2) { }  /* ✅ 匹配"段落2" */
-```
-
----
-
-##  经典面试题（10道精选）
-
-### 题目1：实现三栏布局（固定-自适应-固定）⭐⭐⭐
-
-**思路**：左右固定宽度，中间自适应占满剩余空间
-
-**方案1：Flexbox（推荐）**
-```css
-.container {
-  display: flex;
-}
-.left { flex: 0 0 200px; }   /* 固定200px */
-.main { flex: 1; }            /* 自适应 */
-.right { flex: 0 0 150px; }   /* 固定150px */
-```
-
-**方案2：Grid**
-```css
-.container {
-  display: grid;
-  grid-template-columns: 200px 1fr 150px;
-}
-```
-
-**方案3：浮动（传统）**
-```css
-.left { float: left; width: 200px; }
-.right { float: right; width: 150px; }
-.main { margin: 0 150px 0 200px; }
-```
-
----
-
-### 题目2：如何实现单行/多行文本溢出省略？⭐⭐⭐
-
-**单行省略（兼容性好）**：
-```css
-.ellipsis-single {
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-```
-
-**多行省略（Webkit内核）**：
-```css
-.ellipsis-multi {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;  /* 显示3行 */
-  overflow: hidden;
-}
-```
-
----
-
-### 题目3：用纯CSS实现三角形⭐⭐
-
-**思路**：利用border交界处是斜线的特性
-
-**答案**：
-```css
-.triangle-up {
-  width: 0;
-  height: 0;
-  border-left: 50px solid transparent;
-  border-right: 50px solid transparent;
-  border-bottom: 100px solid red;
-}
-
-/* 其他方向 */
-.triangle-down {
-  border-top: 100px solid red;
-  border-left: 50px solid transparent;
-  border-right: 50px solid transparent;
-}
-```
-
----
-
-### 题目4：实现固定宽高比的容器（如16:9）⭐⭐
-
-**方案1：padding-top百分比（兼容性好）**
-```css
-.ratio-box {
-  position: relative;
-  width: 100%;
-  padding-top: 56.25%;  /* 9/16 = 0.5625 */
-}
-
-.ratio-box-content {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-}
-```
-
-**方案2：aspect-ratio（现代浏览器）**
-```css
-.ratio-box {
-  width: 100%;
-  aspect-ratio: 16 / 9;
-}
-```
-
----
-
-### 题目5：如何清除浮动？⭐⭐
-
-**方案1：伪元素（推荐）**
-```css
-.clearfix::after {
-  content: "";
-  display: block;
-  clear: both;
-}
-```
-
-**方案2：触发BFC**
-```css
-.container {
-  overflow: hidden;  /* 或 auto */
-}
-```
-
-**方案3：Flexbox（现代方案）**
-```css
-.container {
-  display: flex;  /* 自动清除浮动 */
-}
-```
-
----
-
-### 题目6：实现一个Loading旋转动画⭐⭐
-
-**思路**：使用@keyframes定义旋转动画，animation应用
-
-**答案**：
-```css
-.spinner {
-  width: 50px;
-  height: 50px;
-  border: 5px solid rgba(0, 0, 0, 0.1);
-  border-top-color: #3498db;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-```
-
----
-
-### 题目7：实现文字渐变色效果⭐⭐
-
-**思路**：使用background-clip: text裁剪背景
-
-**答案**：
-```css
-.gradient-text {
-  background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: transparent;  /* 回退方案 */
-}
-```
-
----
-
-### 题目8：实现毛玻璃效果（Glassmorphism）⭐⭐
-
-**思路**：使用backdrop-filter模糊背景
-
-**答案**：
-```css
-.glass-card {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px) saturate(180%);
-  -webkit-backdrop-filter: blur(10px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-}
-```
-
----
-
-### 题目9：移动端适配方案有哪些？⭐⭐
-
-**思路**：rem/vw/媒体查询/Flexbox
-
-**答案（3种方案对比）**：
-
-**方案1：Rem + JS动态计算**
-```javascript
-function setRem() {
-  const baseSize = 16;
-  const scale = document.documentElement.clientWidth / 375;
-  document.documentElement.style.fontSize = baseSize * scale + 'px';
-}
-window.addEventListener('resize', setRem);
-```
-
-**方案2：Vw单位（推荐）**
-```css
-/* 750px设计稿，100px = 13.333vw */
-.element { width: 13.333vw; }
-```
-
-**方案3：媒体查询断点**
-```css
-@media (min-width: 768px) { /* 平板 */ }
-@media (min-width: 1024px) { /* 桌面 */ }
-```
-
----
-
-### 题目10：如何优化CSS性能？⭐⭐
-
-**答案（5个维度）**：
-
-**1. 选择器优化**
-```css
-/* ❌ 避免 */
-* { }  /* 通配符 */
-.nav ul li a span { }  /* 过深嵌套 */
-
-/* ✅ 推荐 */
-.nav-link { }  /* 类选择器 */
-```
-
-**2. 减少重排重绘**
-```css
-/* ✅ 使用transform代替left/top */
-.move { transform: translateX(100px); }
-```
-
-**3. 硬件加速**
-```css
-.accelerated {
-  transform: translateZ(0);
-  will-change: transform;
-}
-```
-
-**4. 避免昂贵属性**
-```css
-/* 慎用大模糊半径 */
-box-shadow: 0 0 50px rgba(0,0,0,0.5);
-filter: blur(20px);
-```
-
-**5. 压缩CSS**
-- 移除无用代码（PurgeCSS）
-- 合并相同规则
-- 使用cssnano压缩
-
----
-
-## 核心代码模板（直接背诵）
-
-### 模板1：Flex水平垂直居中
-```css
-.center {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-```
-
-### 模板2：Grid响应式布局
+### Grid响应式布局
 ```css
 .grid {
   display: grid;
@@ -1456,7 +656,7 @@ filter: blur(20px);
 }
 ```
 
-### 模板3：清除浮动
+### 清除浮动
 ```css
 .clearfix::after {
   content: "";
@@ -1465,134 +665,325 @@ filter: blur(20px);
 }
 ```
 
-### 模板4：单行省略号
+### 垂直对齐
+**核心原理**：将元素的 `line-height` 设置为与父容器高度相等的值，利用行高等于容器高的特性使单行文本垂直居中。
+**适用场景**：单行文本、按钮内文字等
 ```css
-.ellipsis {
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+.container {
+     height: 200px;
+     line-height: 200px;
+ }
+```
+
+*   **单行文本**：优先使用 `line-height`。
+*   **未知尺寸元素**：首选 **Flexbox** 或 **绝对定位 + `transform`**。
+*   **多行文本**：首选 **Flexbox**，备选 `table-cell`（兼容旧浏览器）。
+*   **现代项目/响应式布局**：强烈推荐 **Flexbox** 或 **Grid**，它们最灵活且易于维护。
+*   **固定尺寸弹窗**：`绝对定位 + 负外边距` 或 `绝对定位 + margin: auto` 均可。
+
+
+
+### 2.2 文本处理核心
+
+**word-wrap / overflow-wrap**
+```css
+word-wrap: break-word;        /* 旧属性(兼容) */
+overflow-wrap: break-word;    /* 标准属性(推荐) */
+```
+- 功能:允许长单词在边界处断行
+- 应用:处理长URL、长英文单词
+
+**white-space**
+```css
+normal    /* 默认:合并空白,自动换行 */
+nowrap    /* 不换行,单行显示 */
+pre       /* 保留所有空白和换行 */
+pre-wrap  /* 保留空白,允许换行 */
+pre-line  /* 合并空白,保留换行 */
+```
+
+**word-break**
+```css
+normal      /* 按语言规则断行 */
+break-all   /* 任意位置断行(适合中文) */
+keep-all    /* 只在空格处断行 */
+break-word; /* 按单词换行 */
+```
+### 3.3 长内容处理策略
+如何解决长URL或长单词破坏布局的问题
+```css
+.break-long-content {
+    /* 方案1:强制断行 */
+    word-wrap: break-word; 
+    overflow-wrap: break-word;
+    word-break: break-all;
+  
+    /* 方案2:隐藏溢出 */
+    overflow: hidden; 
+    text-overflow: ellipsis; /*  在文本溢出容器时显示省略号（… ）*/
+  
+    /* 方案3:滚动显示 */
+    overflow-x: auto;
+    white-space: nowrap;
 }
 ```
 
-### 模板5：多行省略号
 ```css
-.ellipsis-multi {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-  overflow: hidden;
+/* 全局推荐设置 */
+* {
+    box-sizing: border-box;
 }
 ```
 
-### 模板6：固定宽高比
+
+### 1. 六大水平居中方法对比
+
+| 方法               | 适用元素类型 | 核心代码                                           | 优势     | 劣势           |
+| ---------------- | ------ | ---------------------------------------------- | ------ | ------------ |
+| **text-align**   | 内联/内联块 | `text-align: center`                           | 简单直观   | 影响所有内联内容     |
+| **margin auto**  | 块级元素   | `margin: 0 auto` + `width`                     | 兼容性好   | 需明确宽度        |
+| **绝对定位**         | 任意元素   | `left: 50%` + `transform: translateX(-50%)`    | 精确定位   | 需父元素relative |
+| **Flexbox**      | 任意元素   | `display: flex` + `justify-content: center`    | 简洁强大   | IE10+支持      |
+| **Grid**         | 任意元素   | `display: grid` + `place-items: center`        | 二维布局   | IE不支持        |
+| **inline-block** | 块级元素   | `display: inline-block` + `text-align: center` | 保留内联特性 | 需父容器配合       |
+
+### 2. 决策流程图
+
+```
+需要水平居中？
+├─ 内联元素(文本/图片) → text-align: center
+├─ 块级元素
+│  ├─ 已知宽度 → margin: 0 auto
+│  ├─ 未知宽度
+│  │  ├─ 需要精确定位 → absolute + transform
+│  │  ├─ 一维布局 → Flexbox
+│  │  └─ 二维布局 → Grid
+│  └─ 需要保持内联特性 → inline-block + text-align
+└─ 多元素同时居中 → Flexbox/Grid
+```
+
+### 1. 视口单位定义
+#### （1）视口概念
+- **定义**：浏览器显示网页的可见区域
+- **不包含**：工具栏、滚动条、地址栏
+- **JavaScript获取**：`window.innerWidth` / `window.innerHeight`
+- **移动端关键**：`<meta name="viewport" content="width=device-width, initial-scale=1.0">`
+
+| 单位       | 含义               | 计算基准        | 核心特点       |
+| -------- | ---------------- | ----------- | ---------- |
+| **vw**   | Viewport Width   | 视口宽度的1%     | 随浏览器宽度等比缩放 |
+| **vh**   | Viewport Height  | 视口高度的1%     | 随浏览器高度等比缩放 |
+| **vmin** | Viewport Minimum | 视口宽高中较小值的1% | 保证元素不溢出    |
+| **vmax** | Viewport Maximum | 视口宽高中较大值的1% | 确保视觉冲击力    |
+
+### 2. 计算示例
+```
+视口尺寸：1000px(宽) × 800px(高)
+
+1vw = 10px      (1000 ÷ 100)
+1vh = 8px       (800 ÷ 100)
+1vmin = 8px     (min(1000,800) ÷ 100)
+1vmax = 10px    (max(1000,800) ÷ 100)
+```
+
+### 3. 与百分比的本质区别
+
+| 对比项 | 百分比(%) | 视口单位(vw/vh) |
+|--------|----------|----------------|
+| 参照对象 | **父元素**尺寸 | **浏览器视口**尺寸 |
+| 嵌套影响 | 受父级影响 | 不受父级影响 |
+| 响应式 | 间接响应 | 直接响应视口 |
+
+#### clamp()函数（最现代）
+**clamp()语法**：`clamp(最小值, 理想值, 最大值)` 限制字体范围
 ```css
-.ratio-16-9 {
-  aspect-ratio: 16 / 9;  /* 现代 */
-  /* 或 */
-  padding-top: 56.25%;  /* 兼容 */
+html {
+    /* 语法：clamp(最小值, 理想值, 最大值) */
+    font-size: clamp(86px, 26.67vw, 110px);
+    /*
+    - 最小86px (iPhone5)
+    - 理想26.67vw (375px设备时100px)
+    - 最大110px (iPhone6 Plus)
+    */
+}
+
+/* 组件级别也可使用clamp */
+.title {
+    font-size: clamp(0.24rem, 0.32rem, 0.4rem);
+    /* 最小24px，理想32px，最大40px */
 }
 ```
 
-### 模板7：旋转Loading
+| 单位        | 使用场景      | 典型案例           |
+| --------- | --------- | -------------- |
+| **px**    | 固定尺寸，不需缩放 | 边框、小图标、阴影      |
+| **rem**   | 主体文本，全局缩放 | body字体、模块尺寸、间距 |
+| **em**    | 组件内部相对缩放  | 按钮padding、图标大小 |
+| **%**     | 基于父容器流式布局 | 网格列宽、图片宽度      |
+| **vw/vh** | 视口关联，流体缩放 | 大标题、全屏区块       |
+| **vmin**  | 保持宽高比不溢出  | 头像、移动端图标       |
+| **vmax**  | 最大视觉冲击力   | 背景装饰、大型图案      |
+#### （1）rem vs px vs em 核心区别
+
 ```css
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-.loader {
-  animation: spin 1s linear infinite;
-}
+html { font-size: 100px; }
+.parent { font-size: 20px; }
+
+.child-rem { font-size: 1rem; }   /* 100px - 基于html */
+.child-em { font-size: 1em; }     /* 20px - 基于parent */
+.child-px { font-size: 16px; }    /* 16px - 绝对值 */
 ```
 
-### 模板8：媒体查询断点
+#### （3）rem适配原理
+
+**设计稿到实际设备的转换逻辑**：
+
 ```css
-/* 移动优先 */
-@media (min-width: 768px) { /* 平板 */ }
-@media (min-width: 1024px) { /* 桌面 */ }
+设计稿：750px宽
+目标设备：iPhone6 (375px)
+倍率：750 / 375 = 2倍图
+
+设计稿元素32px → 实际显示 32 / 2 = 16px
+```
+**rem基准设置策略**：
+
+```css
+/* 策略1：基准100px（推荐，易计算） */
+html { font-size: 100px; }
+/* 设计稿750px，基准750/7.5=100px */
+/* 设计稿32px → 32/100 = 0.32rem */
+
+/* 策略2：基准10px（精确度高） */
+html { font-size: 10px; }
+/* 设计稿32px → 32/10 = 3.2rem */
+
+/* 策略3：基准62.5%（兼容浏览器默认16px） */
+html { font-size: 62.5%; }  /* 16px * 0.625 = 10px */
 ```
 
----
+#### （2）常见设备断点参考
 
-## 面试终极秘籍
-
-### 回答技巧
-
-**标准答题框架（STAR法则）**：
-```
-S（Situation）- 是什么
-T（Task）- 为什么用
-A（Action）- 怎么实现
-R（Result）- 优缺点
+```css
+/* 移动端主流断点 */
+@media (max-width: 320px)  { /* iPhone5/SE */ }
+@media (max-width: 375px)  { /* iPhone6/7/8/X */ }
+@media (max-width: 414px)  { /* iPhone6 Plus */ }
+@media (max-width: 768px)  { /* iPad竖屏 */ }
+@media (max-width: 1024px) { /* iPad横屏 */ }
 ```
 
-**示例：面试官问"什么是BFC"**
-```
-S：BFC是块级格式化上下文，一个独立的渲染区域
-T：用于解决margin塌陷、清除浮动、防止文字环绕
-A：通过overflow: hidden、display: flex等触发
-R：优点是简单有效，缺点是可能产生副作用（如隐藏溢出内容）
-```
+scrollbar-gutter: stable;预留滚动条位置
+overflow-y: scroll; 显示滚轮条
 
----
+# 其他
 
-### 加分项
+<style lang="scss"></style>
+1. **SCSS 是什么？**
+    
+    - **SCSS (Sassy CSS)** 是 **Sass** 的一种语法格式。
+    - 它本质上是 CSS 的“超集”。这意味着**所有的标准 CSS 代码在 SCSS 中都是合法的**，同时它增加了 CSS 原生不支持的强大功能。
+2. **为什么要用它？**
+    
+    - CSS 本身非常简单，但缺乏逻辑。SCSS 允许你像写编程语言一样写样式：
+        - **变量 (Variables)**：可以定义颜色、字体大小，全站统一修改（例如：`$primary-color: #007bff;`）。
+        - **嵌套 (Nesting)**：CSS 选择器可以层级嵌套，结构更清晰（例如：`.header { .nav { color: red; } }`）。
+        - **混合宏 (Mixins)**：可以将一段复杂的样式封装成一个函数，在多处重复使用。
+        - **运算**：支持简单的数学运算。
 
-**提到这些会让面试官眼前一亮**：
-- ✅ 性能优化：transform优于left/top
-- ✅ 现代特性：Grid、aspect-ratio、clamp()
-- ✅ 工程化：PostCSS、PurgeCSS、CSS Modules
-- ✅ 实战经验：解决过的兼容性问题、优化过的性能瓶颈
+### **透明度 - opacity**
+```css
+/* opacity: 设置元素透明度，0-1 之间 */
+.blueykes {
+  width: 70rpx;
+  opacity: 0;      /* 完全透明（不可见） */
+}
 
----
+/* 其他值：
+   opacity: 0.5;   半透明
+   opacity: 1;     完全不透明（默认值）
+   opacity: 0.3;   30% 不透明度
+*/
 
-### 高频追问清单
-
-**当你回答完一个问题，面试官可能会追问**：
-
-1. 讲完Flex → 追问："Flex和Grid的区别？"
-2. 讲完BFC → 追问："如何触发BFC？有什么副作用？"
-3. 讲完position → 追问："sticky不生效的原因？"
-4. 讲完动画 → 追问："如何优化动画性能？"
-5. 讲完居中 → 追问："还有其他方法吗？各有什么优缺点？"
-
-**应对策略**：主动提前说明相关知识点，展示知识广度
-
----
-
-## ⚡ 考前30分钟速记清单
-
-```
-【必背公式】
-优先级：!important > 内联1000 > ID100 > 类10 > 标签1
-
-【必背概念】
-BFC：独立渲染区域，解决margin塌陷、清除浮动
-
-【必背区别】
-Flex一维 vs Grid二维
-em父元素 vs rem根元素
-重排改几何 vs 重绘改外观
-
-【必背性能】
-只对transform和opacity做动画
-
-【必背布局】
-Flex居中：justify-content + align-items
-Grid居中：place-items: center
-
-【必背技巧】
-单行省略：nowrap + overflow + ellipsis
-多行省略：-webkit-box + line-clamp
+/* 与 visibility 和 display 的区别：
+   opacity: 0;       隐藏但占位，可点击
+   visibility: hidden;  隐藏但占位，不可点击
+   display: none;    隐藏且不占位
+*/
 ```
 
----
+### **层级控制 - z-index**
+```css
+/* z-index: 设置元素堆叠顺序，数值越大越在上层 */
+.mask_layer {
+  background: #0000006a;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 999;  /* 层级 999，显示在最上层 */
+}
 
-## 面试心态调整
+/* 注意事项：
+   1. 必须配合 position 使用（relative/absolute/fixed）
+   2. 父元素的 z-index 会影响子元素
+   3. 数值越大，层级越高
+   4. 常用层级规划：
+      - 普通元素: 1-99
+      - 弹窗遮罩: 100-999
+      - 模态框: 1000-9999
+      - 通知消息: 10000+
+*/
+```
 
-1. **不要慌**：不会的题目直接说"这个我了解不深，但我知道相关的XXX"
-2. **主动引导**：把话题引到你擅长的领域
-3. **举例说明**：每个概念都配上实际项目经验
-4. **承认不足**：诚实地说"这个我还需要学习"比瞎编强100倍
+### **颜色十六进制透明度**
+```css
+/* 十六进制颜色 + 透明度 */
+.mask_layer {
+  background: #0000006a;  /* 黑色 + 透明度 */
+}
 
----
+/* 格式：#RRGGBBAA
+   RR: 红色值 (00-FF)
+   GG: 绿色值 (00-FF)
+   BB: 蓝色值 (00-FF)
+   AA: 透明度 (00-FF)
+   
+   透明度对照：
+   00 = 0%   完全透明
+   3D = 25%
+   6A = 42%
+   80 = 50%
+   BD = 75%
+   FF = 100% 完全不透明
+*/
 
-**最后的话**：面试不是背题，而是展示你的学习能力和解决问题的思路。保持自信，祝你成功！
+/* 其他写法：
+   rgba(0, 0, 0, 0.42)  等价于 #0000006a
+   rgba(255, 255, 255, 0.5)  半透明白色
+*/
+```
+
+
+### **删除线样式 - text-decoration**
+
+```css
+/* text-decoration: line-through - 删除线（原价样式） */
+.old_price {
+  text-decoration: line-through;  /* 添加删除线 */
+  color: #ccc;                    /* 灰色文字 */
+}
+
+/* text-decoration 值：
+   none: 无装饰（默认）
+   underline: 下划线
+   overline: 上划线
+   line-through: 删除线
+   
+   应用场景：
+   1. 原价显示（折扣价对比）
+   2. 已完成的任务
+   3. 已删除的内容
+   4. 无效的选项
+*/
+```

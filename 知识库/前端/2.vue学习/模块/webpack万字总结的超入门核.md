@@ -1,6 +1,11 @@
 ---
 created: 2025-11-06T09:29:36 (UTC +08:00)
-tags: [JSON,前端开发,JavaScript,数据格式,开发者]
+tags:
+  - JSON
+  - 前端开发
+  - JavaScript
+  - 数据格式
+  - 开发者
 source: https://developer.aliyun.com/article/1613832
 author: 想飞的雪糕
 ---
@@ -359,7 +364,6 @@ module:{
 }
 ```
 
-通过正则表达式的方式，来增加新的图片类型。
 
 #### （3）打包到image文件下
 

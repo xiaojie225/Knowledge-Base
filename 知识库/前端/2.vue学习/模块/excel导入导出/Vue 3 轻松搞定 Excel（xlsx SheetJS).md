@@ -2,17 +2,6 @@
 # 前端仔告别后端！Vue 3 轻松搞定 Excel 导入导出，同事都惊呆了！
 
  
-嘿，各位前端小伙伴！
-
-你是否也遇到过这样的场景：
-
-> “后端大哥，能帮我加个导出 Excel 的功能吗？”  
-> “在排期了，下下周吧…”
-
-只是导个报表而已，等得花儿都谢了… 😫
-
-别慌！今天就给你分享一个前端“黑魔法”，让你用 **[Vue](https://u.jd.com/Sg2wuCY) 3 + `[xlsx](https://u.jd.com/SgnP9HK)`** 在浏览器端独立完成 Excel 导入导出，彻底实现“报表自由”！🚀
-
 准备好了吗？让我们开始吧！
 
 ## 主角登场：`xlsx` ([SheetJS](https://u.jd.com/SgnP9HK)) 是何方神圣？
@@ -52,7 +41,7 @@ npm install xlsx
 
 #### 上代码 (`ExportExcel.vue`)
 
-```
+```vue
 <template>
   <div class="export-container">
     <h3>👇 数据导出示例</h3>
@@ -173,7 +162,6 @@ const exportData = () => {
 </style>
 ```
 
-[![](https://code.ifrontend.net/wp-content/themes/modown/static/img/imging.gif)](https://code.ifrontend.net/wp-content/uploads/2025/09/06090224792-1024x757.png?v=1757149345)
 
 ---
 
@@ -191,7 +179,7 @@ const exportData = () => {
 
 #### 上代码 (`ImportExcel.vue`)
 
-```
+```vue
 <template>
   <div class="import-container">
     <h3>👆 数据导入示例</h3>
@@ -301,10 +289,4 @@ const handleFileUpload = (event) => {
 
 ---
 
-## 总结：你也是 Excel 大师了！
 
-看吧，是不是超级简单？
-
-通过 `xlsx` 这个神器，我们只用纯前端代码就搞定了 Excel 的导入和导出。从此以后，再也不用看后端大哥的脸色啦！
-
-你已经掌握了基本操作，快去你的项目里大展身手吧！无论是做数据看板、报表系统还是批量上传工具，这个技能都能让你的应用瞬间高大上起来。
